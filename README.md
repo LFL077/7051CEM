@@ -6,7 +6,7 @@ Repository for files and resources related to the final dissertation on Data Sci
 
 <br>
 
-# Title (provisional): "Development and evaluation of Reinforcement Learning strategies for landing a simulated 1:10th scale SpaceX Falcon 9 using the `PyFlyt Rocket-Landing-v0` environment."
+# Title (provisional): "Development and Evaluation of Reinforcement Learning Strategies for Autonomous Rocket Landing using PyFlyt"
 
 <br>
 
@@ -230,3 +230,4 @@ self.termination |= True
 - 
 
 .
+
