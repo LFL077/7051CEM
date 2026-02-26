@@ -1,0 +1,1404 @@
+---
+output:
+  pdf_document:
+    number_sections: yes
+  word_document: default
+header-includes: 
+  - \usepackage{setspace}\doublespacing
+  - \usepackage{floatrow}
+  - \floatsetup[figure]{capposition=top}
+  - \usepackage[bookmarksnumbered]{hyperref}
+  - \usepackage{pdfpages}
+  - \usepackage{amsmath}
+fontsize: 12pt
+geometry: left=3cm,right=2.5cm,top=2cm,bottom=2cm
+bibliography: references.bib
+csl: american-psychological-association-7th-edition.csl
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, 
+  fig.align = 'right')
+
+rmarkdown::pandoc_version()
+```
+
+\pagenumbering{gobble}
+\newpage
+
+# \textcolor{white}{Title page} {.unnumbered}
+
+```{r cover, fig.align = 'center', echo = FALSE}
+knitr::include_graphics('../dissertation/images/CU.png')
+```
+
+\begin{center}
+
+\begin{large}
+\begin{spacing}{1}
+
+Faculty of Engineering, Environment and Computing
+
+Centre for Computational Science and Mathematical Modelling
+
+MSc Data Science \& Computational Intelligence
+\end{spacing}
+
+\end{large}
+
+\vspace{10mm} 
+
+\begin{huge}
+\begin{spacing}{1}
+"Development and evaluation of Reinforcement Learning strategies for landing a simulated 1:10th scale SpaceX Falcon 9 using the `PyFlyt Rocket-Landing-v0` environment."
+\end{spacing}
+\end{huge}
+
+\vspace{10mm} 
+
+\begin{large}
+
+Leandro Landgraf
+
+\end{large}
+
+SID: 10811492
+
+\vspace{5mm} 
+
+\begin{large}
+
+{`r format(Sys.time(), '%B, %Y')`}
+
+\vspace{10mm} 
+
+Supervisor: Dr. James Brusey
+
+\end{large}
+
+\vspace{25mm} 
+\begin{spacing}{1}
+Submitted in partial fulfillment of the requirements for the Degree of Master of Science in Data Science \& Computational Intelligence
+
+Academic Year: 2022/23
+\end{spacing}
+\end{center}
+\newpage
+
+## Declaration of Originality {.unlisted .unnumbered}
+
+\singlespacing
+I declare that this project is all my own work and has not been copied in part or in whole from any other source except where duly acknowledged. As such, all use of previously published work (from books, journals, magazines, internet etc.) has been acknowledged by citation within the main report to an item in the References or Bibliography lists. I also agree that an electronic copy of this project may be stored and used for the purposes of plagiarism prevention and detection.
+
+## Statement of copyright {.unlisted .unnumbered}
+
+\singlespacing
+I acknowledge that the copyright of this project report, and any product developed as part of the project, belong to Coventry University.
+Support, including funding, is available to commercialise products and services developed by staff and students. Any revenue that is generated is split with the inventor/s of the product or service. For further information please see [www.coventry.ac.uk/ipr](http://www.coventry.ac.uk/ipr) or contact <ipr@coventry.ac.uk>.
+
+## Statement of ethical engagement {.unlisted .unnumbered}
+
+\singlespacing
+I declare that a proposal for this project has been submitted to the Coventry University ethics monitoring website (https://ethics.coventry.ac.uk/) and that the application number is listed below (Note: Projects without an ethical application number will
+be rejected for marking) 
+
+Signed: ![LandgrafL Signature](/Users/LeandroLandgraf\Documents/10_TechnicalMastersProgramme/5-6_Semester/LandgrafL/signature.jpg){width=25%} Date: `r format(Sys.time(), '%d/%B/%Y')`
+
+\vspace{10mm} 
+
+Please complete all fields.
+
+  -----------------------------------------------------------------------
+  First Name: Leandro           
+
+  Last Name: Landgraf            
+
+  Student ID number: 10811492
+
+  Ethics Application Number: P153624`                
+
+  1^st^ Supervisor Name: Prof. Dr. James Brusey 
+
+  2^nd^ Supervisor Name: 
+  -----------------------------------------------------------------------
+
+\vspace{20mm} 
+
+**This form must be completed, scanned and included with your project submission to Turnitin. Failure to append these declarations may result
+in your project being rejected for marking.**
+\newpage
+
+\pagenumbering{Roman}
+\newpage
+
+
+
+# Abstract {.unnumbered}
+\onehalfspacing
+[ Write here a summary of (about 300 words) the project and its product or 
+findings.  Don’t forget to remove this note and all similar guidance notes 
+throughout this template. ]
+
+
+\newpage
+
+# Table of Contents {.unnumbered}
+\singlespacing
+\renewcommand{\contentsname}{}
+\vspace{-20mm}
+\setcounter{tocdepth}{6}
+\tableofcontents
+\newpage
+
+# List of Figures {.unnumbered}
+\singlespacing
+\renewcommand{\listfigurename}{}
+\vspace{-10mm}
+\listoffigures
+\newpage
+
+# List of Tables {.unnumbered}
+\singlespacing
+\renewcommand{\listtablename}{}
+\vspace{-10mm}
+\listoftables
+\newpage
+
+# Acknowledgements {.unnumbered}
+\onehalfspacing
+
+    I would like to thank my supervisor, Dr. James Brusey, for all the help and guidance, support and feedback, and also the brilliant colleague Jun Jet Tai for developing `PyFlyt` and for all interesting discussions and helpful suggestions. Thanks a lot to both of you.  
+    I also thank Dr Matthew England and Dr Saurav Sthapit for being part of the evaluation team during my presentation, we had a great discussion, I really appreciate the feedback received, and it was also fun.  And I would like to acknowledge my employer, Robert Bosch Ltd, for the sponsorship, and send a shout out to the HR team, in special the training department, for making this happen.    
+    And last but definitely not least, my warmest thanks to my wife Mara França for all the patience, support, and for caring.    
+\setcounter{table}{0}
+\newpage
+
+# Introduction {#introduction}
+\doublespacing
+  
+## Background to the Project {#background}
+\pagenumbering{arabic}
+    The night sky has been a source of inspiration and knowledge for humanity, captivating individuals for millennia. Our species have looked up at the stars and found inspiration, wonder, and meaning in the celestial objects above since the beginnings of time, but it has been less than 70 years since the first artificial Earth’s satellite, Sputnik 1, was launched into orbit and only 60 years since in April 1961 the first human being completed an orbit around our planet. And since the first space flights, the process of delivering people and goods to space has been mostly the same, driven by "expendable launch vehicles", which are basically disposed of after a single use. The search for a reliable solution to reduce the costs of space travel and the development of reusable rockets have been significant goals in the space-launch industry for decades [@williamson2016reusables, p.29]. A considerable progress has been made in 2015 when two privately-owned companies, Elon Musk's SpaceX and Jeff Bezos' Blue Origin, succeeded in landing the propulsion modules of their spacecrafts.  
+    These accomplishments required complex and sophisticated navigation, guidance, control, and sensor technologies, since the landing of an autonomous spacecraft or rocket is an incredibly challenging task, and achieving precision landing near a prescribed target adds an additional level of complexity [@blackmore2016autonomous, p.33]. This research will use the control and steering during landing of reusable launchers and the implementation of Reinforcement Learning (RL) techniques, which have the potential of being more robust and reliable than traditional control methods, as a basis for an investigation into the design of reward functions. The definition of reward functions is probably the biggest challenge in describing a RL system, even more on demanding and complex tasks [@mckinney2023fragility], and is constantly overlooked [@mataric1994reward; @wiewiora2010; @eschmann2021reward]. Too much effort and focus have been spent on developing and proving different algorithms, while at the same time the determination of the function actually responsible for dictating the problem to be solved by the agent is mostly done on a trial-and-error basis, and regarded to be "more art than science".  
+
+## Project Objectives {#objectives}
+    The main objective of this project is the development and the evaluation of Reinforcement Learning (RL) methods and algorithms for landing a simulated 1:10th scale SpaceX Falcon 9 rocket^[Falcon 9, First Orbital Class Rocket Capable of Reflight: https://www.spacex.com/vehicles/falcon-9/.], falling at terminal velocity on a landing pad, with only 1% of fuel remaining. The simulated rocket is a component of the `PyFlyt/Rocket-Landing-v0` environment^[PyFlyt/Rocket-Landing-v0: https://jjshoots.github.io/PyFlyt/documentation/gym_envs/rocket_envs/rocket_landing_env.html.], and one of the challenges presented in the UAV Flight Simulator Gymnasium Environments for Reinforcement Learning Research developed by Coventry University researchers [@tai2023pyflyt]. In order to achieve this ambition and effectively, as far as we are aware of, solving the environment for the first time, several goals have been defined:  
+
+- Discuss the challenges presented in the landing and recovery of reusable launch vehicles (RLVs) and the benefits resulting from them.
+- Investigate proposed solutions to the problem, including traditional and machine-learning based control techniques, and describe the type of simulated environments used in other applications and the `PyFlyt/Rocket-Landing-v0` environment.
+- Identify and select possible reinforcement learning algorithms and methods that may be suitable for solving the `Rocket-Landing-v0` environment.
+- Define and implement the most adequate reward functions to allow the `Rocket-Landing-v0` to be solvable.
+- Implement the selected reinforcement learning methods, modifying the environment if necessary.
+- Demonstrate the feasibility of using reinforcement learning methods to accomplish the control and landing of reusable rockets.
+- Evaluate the implemented methods and reward functions.
+- Compare and analyse the results obtained.
+
+    This research project is concerned not only with solving the above mentioned environment, utilizing different RL algorithms, but also on investigating the possibilities and approaches that can be used to define reward functions. With this in mind, the following research questions address our objectives:  
+
+  1. How can reward functions for reinforcement learning systems be defined?
+  2. Can a reward function developed using a given algorithm be solved by another one, under the same circumstances (i.e., do reward functions over-fit to a particular algorithm [@booth2023perils])?
+  3. Is it possible to successfully solve the `PyFlyt/Rocket-Landing-v0` environment using RL methods? 
+
+## Overview of This Report {#overview}
+
+    The remaining of this dissertation will be aimed at achieving the goals outlined above. In the next section, we go deeper into the challenges and benefits of reusable spacecraft propulsion systems and look into the current status regarding control strategies and techniques to approach the task. We also dive into the topic of reward functions for RL problems, the difficulties to define them and some alternatives and proposals found in the literature. Section \ref{methods} describes and explains the methods used in the development of this project, including the requirements necessary for it and for solving the `Rocket-Landing-v0` environment. We also describe the proposed RL methods and reward functions, together with a high level overview of the implementations and the reasons why specific strategies and algorithms have been chosen.   
+    In Section \ref{results} we examine the testing procedures, show and evaluate the results obtained, and also deliberate on Project Management topics, presenting the planned schedule and considering the risk mitigation and quality management measures taken. A detailed discussion and analysis of this work and its outcomes is the main topic of Section \ref{discussion}, starting with Social, Legal, Ethical and Professional Considerations regarding this research and its topic, and moving on to include a critical appraisal, the conclusion of this project and suggestions for future work, and finally in Section \ref{reflections} we close the dissertation with a review of my own challenges and the lessons learned during the development of this research.  
+
+## Literature Review {#literature}
+
+### The vertical landing of reusable launch vehicles {#rlv}
+    There are two possible recovery scenarios contemplated in the vertical landing of rockets (@simplicio2019reusable, p. 2), namely downrange landing (DRL), the one used by Blue Origin's New Shepard and the initial SpaceX's Falcon 9 programme, and return to launch site (RTLS), currently being used by SpaceX's spaceships to return the first stage of its spacecraft to the launch site using an additional firing of the engines. The approaches differ only by the boost back burn manoeuvre in the RTLS, otherwise they both present the same challenges and advantages.  
+    Some of the key challenges involved in landing a rocket with precision are [@blackmore2016autonomous, p.35-36]:  
+
+- Environmental Factors and Unknowns, such as wind gusts or turbulence, besides the severe entry conditions, including extreme heating caused by the friction with the atmosphere and huge tensions caused by aerodynamic forces.
+- Demand for precise and real-time navigation and guidance systems to accurately determine the position, velocity, and orientation of the spacecraft.
+- Error-free propulsion and landing control, with the engines providing sufficient thrust and being capable of throttling and vectoring to adjust the descent trajectory. Additionally, a dedicated landing system that at the same time supports all the strain from landing and ensures the rocket stays on the spot must be used.
+
+    Notwithstanding the challenges, reusable rockets offer several advantages over traditional expendable rockets, to the extent that RLVs are considered the "holy grail of the space-launch industry" [@williamson2016reusables]:  
+
+- Potential to dramatically reduce the cost of space launches, creating new opportunities for commercial space ventures, scientific research, and exploration. In the words of Elon Musk, CEO and founder of SpaceX [@harwood2016spacex]:
+
+> *"The cost to refuel our rocket, it's mostly oxygen on board, is only $200,000 to $300,000, but the cost of the rocket is $60 million ... fully and rapidly reused, it's somewhere on the order of a hundred-fold cost reduction. You still have your fixed costs, but in marginal costs it's a hundred-fold reduction."*
+
+- Accessibility and frequency of launches, since the turnaround time between launches can be significantly reduced.
+- Reduction of the environmental footprint due to the decrease on the amount of space debris generated and the diminished need to manufacture new rockets for each launch. 
+- Advancements in technology and engineering, not only from the progresses in aerospace areas obtained during the development of the RLVs, but also from the data and information obtained by retrieving the modules that would otherwise be discarded in the ocean.
+- Increased space tourism and commercialization, making space travel accessible to private individuals and businesses.
+
+    In summary, reusable rockets are a key component in reducing the cost and increasing the frequency of launches required to support new ventures and exploration, and allowing humanity to go where no human person has been before. Unsurprisingly, not all the possible benefits of RLVs are without controversy, and this is further discussed in Section \ref{considerations}.  
+
+### Solutions and alternatives {#solutions}
+    The landing of RLVs was not a very common research topic before SpaceX landed its Falcon 9 rocket, and even after this feat it has been mostly focused on traditional and Model Predictive Control (MPC) methods, some using greatly simplified models [@zaragoza2020guidance], some employing very complex modelling with multiple degrees-of-freedom and taking into consideration the curvature of the planet and full environmental factors, like wind gusts and an atmospheric model [@simplicio2019reusable; @simplicio2019guidance; @gettatelli2023convex; @lee2022multi]. What most of the research done so far have in common is the use of convex optimisation and model predictive control for path planning, and there is a genuine limited number of research projects in the field involving reinforcement learning. In addition, currently SpaceX doesn't use Reinforcement Learning as a control method to land its rocket, nor does their rocket uses ML as a control technique. This is likely due to the fact that classic control algorithms provide theoretical guarantees of stability, performance, and robustness, besides being more predictable and transparent (in terms of interpretability) than Deep Reinforcement Learning (DRL) algorithms, and those characteristics compensate for the extra effort involved in developing accurate mathematical models. One reason for that is that during training RL algorithms learn what they want to learn, as long as what they learn helps in receiving more reward. This approach, while allowing the algorithms to reach optimal performance, limits the view of what they learn, and the ability to predict what to expect from them under a certain circumstance.  
+    One of the earliest publications involving RL and RLVs is @ferrante2017robust, where the author developed their own RL environment, heavily based on the OpenAi Gym environment `LunarLander-v2` [@openaigym]. The rocket controllers are very simplified and do not reflect any real applications, but what is interesting in this research is the comparison between four different controllers, two traditional and two RL-based. The traditional strategies implemented are the Proportional Integral Derivative (PID), designed using the usual root-locus method, and a Model Predictive Control (MPC) simplified by the linearisation of the problem. The two RL algorithms implemented are the Linear function approximation Q-Learning and the more complex Deep Deterministic Policy Gradient (DDPG), both using the same reward function. Unfortunately, the reward function is given without explanation to its design, and is very similar to the one used in `LunarLander-v2`, only with different gains, leading us to believe it was done on a trial-and-error process. The author obtained mixed results: the PID controller reached good controllability and rate-of-success in terms of landing, but high fuel consumption, the MPC controller was considered a failure, and similarly bad results were obtained with the Q-Learning model using both low and high discretisations. On the other hand, the DDPG model was very successful, managing to achieve the landing with low fuel consumption for most of the scenarios. Those results are a good indication of where the efforts should be focused and the direction we should take on this project, and the experimentation resulted in good insights that can be useful for us. Further pursuing the topic, and having the above as reference, @larasati2022genetic implemented a Genetic Algorithm (GA) search to define the reward function, improving the performance of the DDPG controller in terms of distance to target and vertical velocity, but still not better than the traditional PID controller; and @souza2022thrust developed another 3 degrees-of-freedom 2D simulated environment to compare their own implementation of PPO with DDPG with hyperparameters from @ferrante2017robust, obtaining better results than the later. One fact in common between all the above research projects and others is that, unlike this project, they are mainly focused on comparing different methods and do not aim in successfully landing the rocket; in most of the cases, either the vertical angle deviation of the rockets or the vertical velocities are too high, or the fuel consumption is unrealistic for a landing manoeuvre.    
+    Searching the internet for more implementations related to RLVs, there are a few similar to the above, inclusive using same actuators and implementing reward functions that are basically variations (sometimes with added parameters, like time-related coefficients to incentivize the agent to land faster), but no peer-reviewed academic research, only GitHub repositories, and most of them incomplete. The only worth mentioning is the `Landing-Starships`^[Landing-Starships - Make autonomous landing rockets using Deep Reinforcement Learning (Unity ML-Agents): https://github.com/Procuste34/Landing-Starships] project, a 3D RL environment modeled after the soon-to-come SpaceX Starship and using a sparse reward function. To make the model work with sparse rewards, the author adopted an interesting approach, using a combination of two techniques: curriculum learning, training the agent on a simpler task initially (i.e. starting the rocket from a lower altitude and less velocity) and imitation learning, by actually solving the environment manually and using this solution in the same way a supervised learning method uses labeled datasets. The combined approach was required only to give the agent a starting point for learning, and sparse reward was used because of the difficulties in defining the reward function and the strange ways the agent found to maximize reward when a dense function was used instead [@leguet2021landing] - very similar to the problem we have with `PyFlyt/Rocket-Landing-v0`.   
+
+### Reward Function Design for Reinforcement Learning Systems {#reward}
+    Reinforcement learning (RL) is a machine learning method that focuses on how an agent can learn to make decisions and take actions in an environment in order to maximize a cumulative reward [@sutton2018reinforcement; @plaat2022deep]. It is inspired by the way humans and animals learn through trial and error, where actions that lead to positive outcomes are reinforced or rewarded, while actions that lead to negative outcomes are discouraged. In RL, reward functions are responsible for dictating the problem to be solved by the agents [@sutton2018reinforcement]. Designing a reward function for RL is basically like designing features for a traditional ML method: it relies a lot on domain specific knowledge and expertise, there are no clear defined rules and it is more art than science, making it an arduous and possibly the most difficult step in defining a RL system [@mataric1994reward].  
+    Early studies proposing a method to define the reward functions have since become "rules", in the sense that many experts and newcomers alike profess and follow them, with the goal of obtaining a faster learning [@booth2023perils]. One such "rule" is the use of domain knowledge [@mataric1994reward], following an approach similar to the one in traditional control systems and using multiple error signals in the functions, to account for multiple goals and using them as a type of progression metric. Another usual approach is to have multiple goals in one function, adding positive and negative reinforcement [@mataric1994reward]. The strategy of including additional rewards to facilitate the learning by providing more frequent feedback is known as *reward shaping*, and has the potential to preserve the optimal policy while speeding up learning and allowing the handling of complex problems [@ng1999policy]. It has been proven that the use of a difference of potentials in shaping rewards not only keep the agent from cycling through stages while gaining positive net reward and thus never converging to the objective, but also to is a sufficient and necessary condition that guarantees no changes to the policy under reward transformations. More about reward shaping will be discussed in Section \ref{implementation}. Unfortunately for engineers designing RL systems, following these "rules" neither make the challenge of defining the reward function any easier nor guarantee the learning will be successful. In trying to obtain a framework and automate the definition of the reward functions, some approaches have been suggested.  
+    @ng2000algorithms addresses the problem of reward function definition by proposing three algorithms for inverse reinforcement learning (IRL), aiming to obtain the function given observations of optimal behaviour. Two of the proposed algorithms are applied to the case where the full policy is known and one to a case where the policy is only know based on a limited number of observations. The authors state that "... we must consider the reward function as an unknown to be ascertained through empirical investigation", especially for those functions which have multiple attributes associated to them, and that the agent designer is likely to have a superficial idea of what the reward function should be to result in the expected behaviour. The obtained results show that the IRL problem has a solution for small and moderate-sized domains, both discrete and continuous. More recently, @hadfield2017inverse proposed a similar approach denominated inverse reward design (IRD), one that observes the reward function directly, instead of inferring it using the optimal behaviour. In it, the authors propose to use a proxy reward function to infer the true one given the environment as a Markov Decision Process (MDP) and a set of possible reward functions.  
+    Furthermore, the search for the perfect reward function method led @singh2009rewards to ask "Where Do Rewards Come From?", questioning the usual view where the rewards come from the external environment when the agents interact with it, and defending the understanding that the rewards are generated within the internal environment as shown in Figure \ref{fig:agent-environment}. By following an evolutionary frame of reference, researchers in RL would adopt "an approach in which adaptive agents, and therefore their reward functions, are evaluated according to their *expected fitness* given an explicit fitness function and some distribution of environments of interest" [@singh2009rewards, p. 2, italics in the original]. The fitness function relates directly to the final goal or objective, and traditional fitness-based reward functions would assign a positive reward to states that directly increase the expected fitness, negative reward when fitness is decreased and uniform (or neutral) rewards for other states. The authors argument is that the optimal reward function may include terms and generate behaviours not necessarily directly related to the end-goal on which one wants to train the agent, but which somehow contribute to this target by improving the fitness value. To identify the best reward function for a defined fitness function would then be simply a (most possibly very large) search problem.    
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/agent-environment.jpg}
+  \centering
+  \caption{Interactions between agent and environment - traditional and integrating intrisic motivation.} 
+  \label{fig:agent-environment}
+  Adapted from Singh et al. (2009, p. 1)
+\end{figure}
+
+    The above discussion naturally leads to the use of evolutionary methods to define the reward function. Some of the same authors employed a genetic programming algorithm to two different classes of distributions of environments: non-stationary environments and environments where the agents have limited lifetime [@niekum2010genetic]. They hypothesized that reward functions found using this method would allow an agent to perform better than one that uses a purely fitness-based reward function, but suggested that this approach should only be used when the initial computational cost of the genetic programming search can be justified by the improvements found over several problems. The use of optimisation methods enable the search for the optimal reward functions to take place over the whole state space and to identify the most relevant variables and features of the RL problem.   
+    Unfortunately, neither the trial-and-error nor the automated reward function learning approaches are without flaws and criticism. The functions designed by trial-and-error are generally manually optimised to meet the goal of fast learning with maximum performance metric, what raises the question whether a reward function developed for one algorithm would also be effective with another or would in reality overfit to the first? Questions have also been raised wether this approach to defining the reward function would lead to an invalid task specification, failing to actually encode the desired task, and suggestions have been made that the systemic errors made by human designers could be assessed by mechanisms based on the IRD method [@booth2023perils]. Correspondingly, most studies on reward learning focused only on the performance of the policies that are trained side by side with the reward function, and are likely to suffer from the same problem, and not being capable of achieving good results when trained from scratch or when using different algorithms. In reality, even though the agent trained using automated methods may perform the correct behaviour, there are no guarantees that a robust reward function has been defined [@mckinney2023fragility]. The issue described above is why this research is also concerned with evaluation of relearning performance, and we aim to implement multiple algorithms, thus ensuring the learned reward function does not overfit to one method only.
+
+\newpage
+
+# Methods {#methods}
+
+## Software development methods {#software}
+    Over the years, many different process models have been proposed and applied for software research and development. Different authors identify and classify the models on distinct forms and categories, i.e. while @mohapatra2010software [p.17-32] describes four models (the code-and-fix model, the waterfall model, the evolutionary model - implemented in a prototyping form or using an incremental approach, and the spiral model), a decade later @foster2021software [p.9-14] describes twice that number (waterfall model, phased prototype model, iterative development model, rapid prototype model, formal transformation model, component-based model and finally the agile development model).    
+    Of all the models listed above, the waterfall model is the most traditional and has been extensively used by researchers and developers for many years. Unfortunately this traditional model is too rigid, since due to its top-down approach one phase only starts when the preceding one is finished. Because of this, full systemic testing is only done when all development is finished, requiring a lot of effort not only with this activity but also with the documentation, to the extend of becoming very bureaucratic [@mohapatra2010software, p.25].    
+    In order to achieve the goals of this project, an incremental, or iterative, approach is followed. Its main characteristic is that the development happens in steps of increasingly complexity, through several iterations, and thus coding, integration and testing are done in an incremental manner [@mohapatra2010software,p.25-27; @foster2021software,p.10-11]. Each step, or iteration, is a self-contained project, happening either in series or parallel, and the final iteration results on the release of the complete development [@foster2021software, p.10]. By building and testing with increased level of complexity, one is able to ascertain that every consecutive iteration starts with a working foundation, making testing, debugging and validation easier and less prone to errors. The downside of this approach is that the steps have to be clearly defined, what requires the end-goal to be visible. This could be an issue on a research problem, when the solution is still not fully determined.    
+    Besides the development methodology described above, there are in Computer Science many different research methodologies used to answer the questions posed by the researchers. @elio2011computing [p.1-2] lists five possible methodologies used in the discipline: formal, experimental, build, process, and model. The one that passes perfectly not only to the problem at hand but also to the chosen process model is the "build" research methodology, which ultimately aims at the construction of an "artifact", either physical or (in our case) a software system. According to the authors, "to be considered research, the construction of the artifact must be new or it must include new features that have not been demonstrated before in other artifacts", and we hope to fulfill this by solving the `Rocket-Landing-v0` environment for the first time. Besides, the authors also recommend a set of good practices that are either already considered in the incremental approach, or easily included. Those are:    
+
+- Design the software system: this means that even in small projects one needs a plan, preferable using a modular approach which simplifies testing. In this research, the plan is summarized in Tables \ref{original_timeplan} and \ref{timeplan} that can be found in Section \ref{management}.
+- Reuse components: this suggestion goes hand-on-hand with the next one; by choosing to use Python, plenty of free libraries and examples of implementation are available and can be both used as reference and to save time. More on this below, in Section \ref{requirements}.
+- Choose an adequate programming language: as mentioned, Python was the chosen programming language. Besides the reason above, this is the programming language I am more familiar with and the one used the most in Data Science and Artificial Intelligence projects. More on this design choice can be found in Section \ref{requirements}.
+- Consider testing all the time: in a incremental model, the implementation is made in small steps, that are fully tested when done; for this project we did not consider one automated testing system, but by constantly using the same "seed" for all stochastic processes, we ensure better repeatability when including new functionalities. Testing will be covered in more details in Section \ref{testing}.
+
+## Requirements and Analysis {#requirements}
+    To be able to run the `PyFlyt/Rocket-Landing-v0` environment, a number of different software packages and libraries are required, and have to be installed before any development can be done. They are:  
+
+  - The programming language of choice is Python, in its version 3.9.0^[Python 3.9.0: https://www.python.org/downloads/release/python-390/]. Python is the most used programming language in Data Science applications and the one used to develop PyFlyt.
+  - To help programming, I chose the Spyder integrated development environment (IDE)^[Spyder IDE: https://www.spyder-ide.org/].
+  - PyFlyt uses the current incarnation of the OpenAi's Gym library [@openaigym], called Gymnasium^[Gymnasium Documentation: https://gymnasium.farama.org/], so it also has to be installed.
+  - Since PyFlyt uses the Bullet^[Bullet Real-Time Physics Simulation: https://pybullet.org/wordpress/] physics engine, the PyBullet library is also required.
+
+    The implementation of deep reinforcement learning (DRL) algorithms requires some extra packages; luckily, Python has many libraries available that can make development and coding more efficient and faster. The following are either required, or make life easier, when implementing DRL algorithms:
+
+  - The open-source deep learning (DL) framework PyTorch^[PyTorch: https://pytorch.org/] that is used in some of the other libraries and also my DL library of choice.
+  - The library Wingman^[Wingman for your AI applications: https://github.com/jjshoots/Wingman], which supports the management of DL projects. 
+  - An implementation of the DRL algorithm Soft Actor-Critic (SAC) called `rocket_landing_sac`^[Rocket Landing in PyFlyt using SAC: https://github.com/jjshoots/rocket_landing_sac]; this is useful for testing new reward functions and implementing other DRL algorithms, as it is already fully compatible with the `PyFlyt/Rocket-Landing-v0` environment and Wingman.
+
+    Finally, a couple more web-based systems are used in this project:  
+
+  - Since Wingman uses Weights & Biases^[Weights & Biases - Developer tools for ML: https://wandb.ai/site], both the installation of the `wandb` library in Python and the creation of an online account are useful to track the experiments.
+  - A GitHub^[GitHub: https://github.com/] account to not only be able to fork and modify the environment and other open source libraries that may require changing, but also to version control and backup the project files.
+
+    All the above packages and libraries are installed using a Python Virtual Environment, which is useful to isolate the working environment from the base, thus enabling us to have a self-contained application and development platform. The installation steps and some initial code for testing these requirements are reproduced in the Appendix \ref{preparation}.
+
+## Implementation {#implementation}
+    In this section, some theoretical and practical aspects of the implemented methods and algorithms are presented, including the justification of the choices made during this research. We start the section with a formal definition of the RL problem, describe why SAC and PPO are good candidate algorithms to solve the `PyFlyt/Rocket-Landing` environment, and present the reward shaping method used. The second part of this section dives deep into the environment itself, describing the library and the models used, and finishes with a long discussion on the success criteria for solving the environment and the implemented reward functions tested with aims to find a solution.     
+
+### Reinforcement Learning {#rl}
+    Reinforcement Learning problems are characterized as Markov Decision Processes (MDP) of the form $M = \langle S, A, T, \gamma, R \rangle$ [@sutton2018reinforcement], where $S$ is the state space, $A$ is the action space, $T(s,a,s') = Pr(s'|s,a)$ are the next stage transition probabilities that determine the likelihood of transitioning from one state to another given an action, $\gamma \in (0,1]$ is the discount factor, and $R(s,a,s')$ is the reward function defining a reward $r$ received when taking action $a$ in state $s$ resulting in transitioning to state $s'$. This is the core concept in RL and provides a mathematical framework to model the interactions between an agent and an environment.    
+    In reinforcement learning, an agent interacts with an environment and learns by receiving feedback in the form of rewards or punishments. The objective of the agent is to learn an optimum policy $\pi^{*}: S \to A$, which is a mapping from states to actions, that maximizes the long-term cumulative reward, i.e. maximizes the expected total sum of discounted rewards $\sum_{t=0}^{\infty} \gamma^{t}r_{t}$. The agent explores the environment by taking actions and observes the resulting state transitions and associated rewards, using this information to update its knowledge and improve its decision-making capabilities over time. The environments can be either deterministic or stochastic, while the action space can be discrete or continuous. Policy-based methods work well on both cases, and this is the reason for the choices we made in terms of RL algorithms to solve the `PyFlyt/Rocket-Landing` environment.  
+    Policy-based RL methods are a class of algorithms that directly learn a policy without explicitly learning a value function [@plaat2022deep]. The policy is used to guide the agent's decision-making process in an environment to maximize the cumulative reward over time. In contrast to value-based methods, which focus on estimating the value of being in a particular state and selecting actions based on value estimates, policy-based methods learn the optimal policy directly. There are several advantages to using policy-based RL methods [@plaat2022deep]:  
+
+- They are well suited for using on deep RL
+- Policy-based methods are well-suited for environments with large or continuous action spaces, as they can directly optimize for continuous actions without the need for discretization.
+- They naturally and easily find stochastic policies, which can be beneficial in exploration and handling uncertainty, and cause stability problems for value-based methods.
+- Policy-based methods are generally more stable and have better convergence properties in high-dimensional or complex state and action spaces than argmax-based algorithms.
+- Some policy-based methods, such as those incorporating entropy regularization, inherently encourage exploration in the learning process.
+
+    On the other hand, policy-based methods can also have their challenges:  
+
+- They have low sample efficiency and high variance. This is because they both rely on the data generated by the current policy, which can be time-consuming in some environments, and perform evaluation of full trajectories, leading to infrequent improvements and slow convergence.
+- Policy optimization can sometimes converge to local optima, especially in complex environments, due to the long time it takes to find the global optimum.
+
+    Several improvements have been made to these RL methods to enhance their performance, such as the introduction of actor-critic approaches, trust regions to reduce large changes to parameters and the use of high entropy distributions to increase exploration. Those improvements led to methods such as Soft Actor-Critic (SAC) and Proximal Policy Optimization (PPO) to become the preferable model-free RL methods for many applications.  
+
+#### Soft Actor-Critic {#sac}  
+      
+    Soft Actor-Critic (SAC) is a model-free, off-policy RL algorithm that combines maximum entropy RL with the actor-critic framework and is particularly well-suited for environments with continuous action spaces and tasks with high-dimensional state spaces. It seeks to maximize both the expected return and the entropy of the policy [@haarnoja2018soft]. SAC has been used successfully in complex control tasks and has the advantage of exploring a wide range of policies while maintaining a good balance between exploration and exploitation.  
+    This method can reuse past experiences efficiently, as it maintains a replay buffer of experiences collected from the interactions of the agent with the environment. The off-policy aspect makes SAC more sample-efficient compared to on-policy algorithms like PPO. Unlike some other actor-critic algorithms that use hard updates, SAC employs soft policy updates, which means it updates the policy in a way that allows for a trade-off between exploration and exploitation. It maximizes the expected reward while also incorporating an entropy term added to the objective function, encouraging the policy to be stochastic, which in turn promotes better exploration and encourages stability [@haarnoja2018soft].  
+
+#### Proximal Policy Optimization {#ppo}  
+      
+    Proximal Policy Optimization (PPO) is a popular model-free, on-policy RL algorithm that optimizes a policy by iteratively updating it through multiple iterations. PPO strikes a balance between exploration and exploitation by using a surrogate objective function to ensure policy updates do not deviate too far from the current policy, i.e. PPO works by iteratively updating the policy in a way that ensures that the policy changes are not too large, preventing catastrophic changes [@schulman2017proximal]. This is achieved by the introduction of a "proximal" term to its objective function, which constrains the policy update to a certain region, preventing large changes. Besides, PPO enforces a trust region to bound the policy update, ensuring that the new policy remains close to the old policy to avoid destabilization.  
+    One of the main differences to SAC is that PPO is an on-policy algorithm, meaning it updates its policy using data collected from the interactions of the current policy with the environment. On the other hand, SAC is an off-policy algorithm, which makes it more sample-efficient since it can reuse past experiences stored in a replay buffer. Furthermore, PPO enforces a trust region to limit the policy update size, ensuring stability during training. SAC, on the other hand, uses soft policy updates with an entropy term to control the exploration-exploitation trade-off. Finally, in terms of exploration strategy, PPO relies on the proximal policy objective and does not explicitly encourage exploration while SAC incorporates an entropy term in its objective function, which encourages the policy to be stochastic and promotes exploration.  
+    In summary, both PPO and SAC are effective RL algorithms for continuous action spaces, but they have different approaches to policy updates (proximal and soft updates) and exploration strategies (trust region and entropy regularization).  
+
+#### Reward Shaping {#shaping}  
+      
+    Reward shaping is a technique used to improve the learning process and guide an RL agent to achieve a desired behavior more efficiently, by adding additional rewards to provide more frequent feedback. In some RL problems, the original reward signals from the environment might be sparse or not well-aligned with the desired behavior. This can result in slow learning or make it challenging for the agent to learn the optimal policy effectively. Reward shaping addresses this issue by introducing additional rewards or modifying the existing reward signal to guide the agent towards the desired behavior [@wiewiora2010]. The main idea behind reward shaping is to provide the agent with additional reward signals that reflect intermediate progress or subgoals related to the main task. These additional rewards are designed to encourage the agent to explore more efficiently and learn faster, effectively turning a sparse reward into a dense reward function.  
+    Reward shaping should be done carefully to avoid unintended side effects. If the additional rewards are not designed appropriately, they may lead the agent to prioritize short-term rewards and neglect the main task, resulting in suboptimal behavior. Additionally, excessively shaped rewards might lead to overfitting to a specific task and hinder the ability of the agent to generalize to new environments. To address those problems, the Potential-Based Reward Shaping (PBRS) method was proposed by @ng1999policy and is defined as the difference of a potential function $\Phi$ over an initial state $s$ and a final state $s'$:  
+\begin{equation}
+  F(s, a, s') = \gamma \Phi(s') - \Phi(s)
+  \label{eq:pbrs}
+\end{equation}
+    Where $\gamma$ is the same discount factor used in the original MDP and $F(s, a, s')$ is added to the original reward function, resulting in a new MDP $M' = \langle S, A, T, \gamma, R' \rangle$ with $R' = R + F$. This basic approach is deemed sufficient for this research, but the potential-based shaping concept can be generalized and applied to both states and actions [@wiewiora2003principled] and also extended to include time as a parameter of the potential function $\Phi$, resulting in a dynamic potential function [@devlin2012dynamic] that has been successfully applied to multi-agent RL problems. Overall, reward shaping is a powerful tool that can significantly improve the learning process in reinforcement learning, especially when dealing with sparse and challenging reward structures. When used wisely, reward shaping can help RL agents learn more efficiently and achieve better performance in complex tasks.  
+
+### PyFlyt library {#pyflyt}
+    PyFlyT is an open source unnamed aerial vehicle (UAV) design and simulation library, developed in Python using the Bullet Physics Engine and fully compatible with the Gymnasium API [@tai2023pyflyt]. Its goal is to be a flexible and user-friendly platform for RL development in UAV control, fully configurable in a modular approach, and as such supports any customised configuration of UAVs by using basic components such as motors, boosters, (flapped) lifting surfaces, gimbals and cameras. The library also contains three pre-defined models: *QuadX*, a quadrotor drone presented in two different options (a 8:1 representation of the Crazyflie quadrotor and a generic 1 kg quadrotor simulating a standard F450 drone); *Fixedwing*, an aircraft with total mass of 2.35 kg, wingspan of 2.4 m and total length of 1.55 m, containing one motor and five lifting surfaces (one fixed - the main wing - and four flapped - left aileron, right aileron, horizontal tail, and vertical tail); and *Rocket*, the model used in this project and further described below. The library also contains four pre-built environments, all of them with observation spaces either in the `Box` space or as a `Dict` consisting of a `Box` and a `Sequence` spaces and action spaces using a `Box` space:
+
+- `PyFlyt/QuadX-Hover-v0` with the task of training an agent to hover the *QuadX* indefinitely.
+- `PyFlyt/QuadX-Waypoints-v0` aimed at flying the *QuadX* to reach a configurable number of randomly generated waypoints in 3D space following a given sequence.
+- `PyFlyt/Fixedwing-Waypoints-v0` is the same as above but using the *Fixedwing* UAV instead.
+- `PyFlyt/Rocket-Landing`, shown in Figure \ref{fig:rocket_landing1}, objective is to safely land the *Rocket* model on the landing platform (which can be seen as a grey area below the rocket in the image), falling at terminal velocity with only 1% of fuel remaining. 
+
+#### Rocket model  
+      
+    The *Rocket* UAV is modeled following the design of the Falcon 9 v1.2, including the first stage and interstage, using a 1:10 scale with physical properties obtained from the official launch report. Unlike most simulations that use a gimbaled booster and jet-thrusters to maneuver the RLV, *Rocket* contains not only the electric gimbal and booster, but also four lifting surfaces to represent the grid fins featured in the SpaceX Falcon 9.  
+    The boosters are dependent on a fuel source the will deplete with use and thus changing the mass and inertia characteristics of the UAV. Their modelling is extremely complex, and it has been simplified for the `PyFlyt` library to achieve better generalisation, having as main parameters total fuel mass $m_{b_{max}}$, the maximum fuel mass flow rate $\dot{m}_{b_{max}}$, the minimum and maximum thrusts $T_{b_{min}}$ and $T_{b_{max}}$, a boolean for reignitability ${\mathbb{I}_{b}}$, the booster ramp time constant ${\tau_{b}}$, and a thrust output fluctuation standard deviation ${\sigma_{b}}$, and not including the sloshing of liquid fuel, reignition issues like engine deterioration for solid-fuel engines or limit on maximum number of times it can be reignited, and only using a linear thrust profile. The actions controlling the booster are the normalised throttle position $\beta\in[0,1]$ and the ignition state $\iota$. The booster is mounted on the electric gimbal, which in this model is a pivoted joint that rotates around the XY axis, redirection the thrust generated by the former and allowing thrust vectoring control of the propulsion system. It is configured by defining the unit vectors for the two rotational axis $\mathbf{c}_{a}$ and $\mathbf{c}_{b}$, the maximum actuation angles ${k}_{g-a}$ and ${k}_{g-b}$, and the actuation time constant ${\tau_{g}}$. Gimbals are controlled by using a normalised input $\xi_{i}\in[-1,1]; \mathit{i}\in a,b$, resulting in a three-dimensional rotation around the body frame of the UAV.  
+    Finally, the lifting surfaces are basically aerofoils that, while traveling through the air, generate more lifting force $F_{s_{lift}}$ than dragging force $F_{s_{drag}}$, resulting in a net force and a net moment $T_{s}$ around the aerodynamic centre. The model is valid for most normal operating conditions, but not necessarily account for extreme aerodynamic behaviors or highly turbulent or supersonic air flows. They are controlled by three deflection parameters: ${\nu_{x}}$ in the X plane, ${\nu_{y}}$ in the Y plane, and a cyclical deflection ${\nu_{yaw}}$ . Those three values, added to the booster ignition, throttle position and two values for the gimbal actuation on the body frame XY axes, make the action space for the *Rocket* UAV.
+
+#### Rocket-Landing-v0 environment  
+      
+    As previously mentioned, the goal of the environment is to safely land the *Rocket* UAV on a 4-meter diameter landing pad, falling from 500 m with only 1% fuel remaining. Figure \ref{fig:rocket_landing1} shows the simulation in the beginning of the episode (left panel), and close to the end (right panel); the landing platform can be seen as a gray surface below the RLV. The action space of the environment contains the same seven elements as the *Rocket* UAV and is given by:
+\begin{equation}
+  \mathbf{a} = [\nu_{x}, \nu_{y}, \nu_{yaw}, \iota, \beta, \xi_{x}, \xi_{y}]
+  \label{eq:action_space}
+\end{equation}
+    The observation space vector has either 32 or 33 elements, depending on the angular notation being *euler* or *quaternion*, and is represented by:
+\begin{equation}
+  \mathbf{s} = [\boldsymbol{\dot\theta_{B}}, \boldsymbol{\theta_{G}}, \mathbf{\dot{p}}_{B}, \mathbf{p}_{G}, \mathbf{a}_{t-1}, \mathbf{s}_{aux}, \mathbb{I}_{pad}, \mathbf{d}_{G}]
+  \label{eq:observation_space}
+\end{equation}
+    Where $\boldsymbol{\dot\theta}$ is the angular velocity of the rocket, $\boldsymbol{\theta}$ its angular position (and can be a three or four element vector), $\mathbf{\dot{p}}$ and $\mathbf{p}$ represent the linear velocity and position respectively, and $\mathbf{d}$ is the rotated distance to the pad, all referenced to either the body (subscript *B*) or the ground (subscript *G*). Additionally, $\mathbf{a}_{t-1}$ is the previous action vector, $\mathbb{I}_{pad}$ indicates contact with the landing pad, and $\mathbf{s}_{aux}$ is a nine-element vector containing auxiliary information from the actuators, such as normalized lifting surface deflection angles (for the four fins), booster ignition status, fuel level remaining, booster throttle actuation and gimbal actuation states (two elements).  
+
+\begin{figure}
+  \includegraphics[width=0.45\textwidth]{../dissertation/images/env_gif1.png}
+  \hfill
+  \includegraphics[width=0.45\textwidth]{../dissertation/images/env_gif2.png}
+  \centering
+  \caption{Screen-capture samples of the \texttt{PyFlyt Rocket-Landing-v0} environment.} 
+  \label{fig:rocket_landing1}
+\end{figure}
+
+##### Landing Criteria  
+      
+    Although the proposed approach to solve the `PyFlyt/Rocket-Landing` was to focus on the definition of the reward function, upon closer investigation it was identified that the success and failure criteria could also be improved. The original landing criteria are given by Equations \ref{eq:og_land1}, \ref{eq:og_land2}, and \ref{eq:og_land3}, where $\mathbb{I}_{pad}$, $\mathbb{I}_{collision}$, and $\mathbb{I}_{landed}$ are all binary values representing a successful contact with the landing pad, a catastrophic collision with the ground, or a successful landing, respectively. 
+\begin{equation}
+  \mathbb{I}_{pad} = \begin{cases} 1 & \text{if landing pad contact} 
+    \\ 0 & \text{otherwise} 
+    \end{cases}
+  \label{eq:og_land1}
+\end{equation}
+\begin{equation}
+  \mathbb{I}_{collision} = \begin{cases} 1 & \text{if } [(\lVert \boldsymbol{\dot\theta_{t-1}} \rVert > 0.35 rad/s) \lor (\lVert \mathbf{v_{t-1}} \rVert > 1.0 m/s)]  
+    \\ 0 & \text{otherwise}    
+    \end{cases}
+  \label{eq:og_land2}
+\end{equation}
+\begin{equation}
+  \mathbb{I}_{landed} = \begin{cases} 1 & \text{if } [(\lVert \boldsymbol{\dot\theta_{t-1}} \rVert < 0.02 rad/s) \land (\lVert \mathbf{v_{t-1}} \rVert < 0.02 m/s) \land (\lVert \boldsymbol{\theta_t} \rVert < 0.1 rad)]  
+    \\ 0 & \text{otherwise} 
+    \end{cases}
+  \label{eq:og_land3}
+\end{equation}
+    The above set of equations have several problems: first of all, there is a "deadband" between $\mathbb{I}_{collision}$ and $\mathbb{I}_{landed}$, a region where the agent would receive no feedback on a sparse rewards setting. Secondly, when checking the original source for the maximum allowed linear velocity used by the developer^[Reusable rockets explained: https://cosmosmagazine.com/space/launch-land-repeat-reusable-rockets-explained/], we identified that the originally suggested value of 0.55 m/s, and later on increased to 1.0 m/s, was actually supposed to be 5.56 m/s. Finally, there was no overturn stability criteria considered from "crashing" (estimated to be $\approx 0.4 rad$^[How stable would a Falcon 9 first stage be after it has landed on a drone ship?: https://space.stackexchange.com/questions/8771/how-stable-would-a-falcon-9-first-stage-be-after-it-has-landed-on-a-drone-ship]), and the criteria for $\mathbb{I}_{landed}$ are too restrictive.  
+    In order to address the above issues, the following changes have been implemented:  
+\begin{equation}
+  \mathbb{I}_{pad} = \begin{cases} 1 & \text{if landing pad contact} 
+    \\ 0 & \text{otherwise} 
+    \end{cases}
+  \label{eq:land1}
+\end{equation}
+\begin{equation}
+  \mathbb{I}_{collision} = \begin{cases} 1 & \text{if } [(\lVert \boldsymbol{\dot\theta_{t-1}} \rVert \geq 0.35 rad/s) \lor (\lVert \mathbf{v_{t-1}} \rVert \geq 5.56 m/s) \lor (\lVert \boldsymbol{\theta_{t}} \rVert \geq 0.2 rad)]  
+    \\ 0 & \text{otherwise} 
+    \end{cases}
+  \label{eq:land2}
+\end{equation}
+\begin{equation}
+  \mathbb{I}_{landed} = \begin{cases} 1 & \text{if } [(\lVert \boldsymbol{\dot\theta_{t-1}} \rVert < 0.35 rad/s) \land (\lVert \mathbf{v_{t-1}} \rVert < 5.56 m/s) \land (\lVert \boldsymbol{\theta_t} \rVert < 0.2 rad)]  
+    \\ 0 & \text{otherwise} 
+    \end{cases}
+  \label{eq:land3}
+\end{equation}
+    Basically, the "deadband" between $\mathbb{I}_{collision}$ and $\mathbb{I}_{landed}$ was been removed by increasing the limits to achieve a successful landing, and the maximum allowed linear velocity changed to 20 km/h. Moreover, an overturn stability criteria of $0.2 rad =11.5 deg$ was included for the "fatal collision" condition and mirrored on the "successful landing" condition, resulting in less restrictive criteria for $\mathbb{I}_{landed}$.  
+
+##### Reward Functions
+      
+    When first implemented, the reward function of the `PyFlyt/Rocket-Landing` environment was given by [@tai2023pyflyt]:  
+\begin{equation}
+  R^{0} = r_{d} + r_{v} + \mathbb{I}_{pad}r_{pad} - 100\mathbb{I}_{ground}
+\end{equation}
+\begin{equation}
+  r_{d} = -0.2 \cdot d_{pad}
+\end{equation}
+\begin{equation}  
+  r_{v} = -d^{-2}_{pad} \cdot v
+\end{equation}
+\begin{equation}
+  r_{pad} = \begin{cases} -20 & \text{if fatal,} \\ 100 & \text{if safe} \end{cases}
+\end{equation}
+    Before the start of this project, more terms had been added to the reward function, and it included both a sparse and a dense options that could be chosen through an option when loading the environment. The following equations represent the current stage thant includes an option to choose between different functions:    
+\begin{equation}
+  R_{sparse} = {\alpha^j_{i_{7}}} \times \mathbb{I}_{pad} + {\alpha^j_{i_{8}}} \times \neg\mathbb{I}_{pad} + {\alpha^j_{i_{9}}} \times \mathbb{I}_{collision} + {\alpha^j_{i_{10}}} \times \mathbb{I}_{landed}
+  \label{eq:R_Sparse}
+\end{equation}
+\begin{equation}
+  R^{0}_{dense} = - {\alpha^0_{i_{1}}} + (\frac{{\alpha^0_{i_{2}}}}{d_{pad}+0.1}) + ({\alpha^0_{i_{3}}} \times \Delta d_{pad}) - ({\alpha^0_{i_{4}}} \times |\dot\theta_{z}|) - ({\alpha^i_{0_{5}}} \times \theta) + R^{0}_{sparse}
+  \label{eq:R_0}
+\end{equation}
+    Where ${\alpha^0_{i_{0}}}$ is the term that defines the reward function to be used (in this case, ${\alpha^0_{i_{0}}} = 0$ meaning the original reward function given by Equations \ref{eq:R_Sparse} and \ref{eq:R_0}), $\boldsymbol{\alpha^0_{0}} = \{ 0, 5, 2, 100, 1, 3, 0, 20, 0, 0, 500 \}$ is the original vector of factors, and $R^{0}_{sparse}$ is Equation \ref{eq:R_Sparse} with the $\alpha_{i_{k}}$ terms from $\mathbf{\alpha^0_{i}}$.  
+    Following the PBRS method, we maintained the sparse reward function given by \ref{eq:R_Sparse}, which only returns rewards at the end of the episode, and defined four different potential-based functions $\Phi_j$. The final reward function on each case becomes $R'_j = R^{j}_{sparse} + F(s, a, s')_j$.  
+    The first function is defined by Equation \ref{eq:phi_1}, and is simply the negative of the $\mathbb{L}^2$ (Euclidian) norm. Because the values of the potential function for states closer to the target state have to be higher [@yang2021potential], the negative of the length of the state-space vectors is used in this case. The resulting $F(s, a, s')_1$ is given by Equation \ref{eq:F_1}.  
+\begin{equation}
+  \Phi_1 = -\lVert \mathbf{s} \rVert \;\;\;\;\; with \;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \boldsymbol{\dot\theta}, \boldsymbol{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}
+  \label{eq:phi_1}
+\end{equation}
+\begin{equation}
+  F(s, a, s')_1 = {{\alpha^1_{i_{k}}}} \times \left( -\gamma \times \lVert \mathbf{s'} \rVert + \lVert \mathbf{s} \rVert \right) \;\;\;\;\;\;\;\; 2 \leq k \leq 6
+  \label{eq:F_1}
+\end{equation}
+    The second potential function, shown in Equation \ref{eq:phi_2}, is the inverse of the $\mathbb{L}^2$ norm. In this case, because smaller state vectors yield higher function values, the minus is not required; and the additional 0.1 is to avoid division by zero:  
+\begin{equation}
+  \Phi_2 = \left( \frac{1}{\lVert \mathbf{s} \rVert +0.1} \right) \;\;\;\;\; with \;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \boldsymbol{\dot\theta}, \boldsymbol{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}
+  \label{eq:phi_2}
+\end{equation}
+\begin{equation}
+  F(s, a, s')_2 = {{\alpha^2_{i_{k}}}} \times \left( \frac{\gamma}{\lVert \mathbf{s'} \rVert +0.1} - \frac{1}{\lVert \mathbf{s} \rVert +0.1} \right) \;\;\;\;\;\;\;\; 2 \leq k \leq 6
+  \label{eq:F_2}
+\end{equation}
+
+```{r functions, echo = FALSE, include = TRUE, fig.align = 'center', out.width = "50%", fig.cap = "Log2 and Log10 plot comparison" }
+par(mar = c(5, 4, 0, 2) + 0.1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+x=seq(0,100,0.1)
+y=x
+y1=1/(x+0.1)
+y2=log10(x+1)
+y3=log2(x+1)
+plot(x,y,type='l',col='purple', xlim=c(0,30), ylim=c(0,10))
+lines(x,y1,col='red')
+lines(x,y2,col='blue')
+lines(x,y3,col='green')
+legend('topright',inset=0.05,c("y = x","y = 1/(x+0.1)","y = Log10(x+1)","y = Log2(x+1)"),
+       lty=1,col=c("purple","red","blue","green"),cex=1.5,pch=1,pt.cex=1.5)
+```
+
+    The final two potential functions are based on the intuition that the previous function becomes too steep as a given state vector approaches zero and the linear progression of the first function does not emphasize the reward as the state nears the desired state. For these reasons, the functions given by Equations \ref{eq:phi_3},  \ref{eq:F_3}, \ref{eq:phi_4},  and \ref{eq:F_4} were chosen, allowing us to have two levels of smoothness on the functions, but at the same time giving more impact to the rewards the closer the states are from the zero state. The use of the minus follows the same reason as for $\Phi_1$, and the added +1 is to avoid crossing to the negative region of the function as the sate vectors approach zero.    
+\begin{equation}
+  \Phi_3 = \left( - \log _{10} (\mathbf{s} + 1) \right) \;\;\;\;\; with \;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \boldsymbol{\dot\theta}, \boldsymbol{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}
+  \label{eq:phi_3}
+\end{equation}
+\begin{equation}
+  F(s, a, s')_3 = {{\alpha^3_{i_{k}}}} \times \left( -\gamma \times \log _{10} (\mathbf{s'} + 1) + \log _{10} (\mathbf{s} + 1) \right)
+  \label{eq:F_3}
+\end{equation}
+and
+\begin{equation}
+  \Phi_4 = \left( - \log _{2} (\mathbf{s} + 1) \right) \;\;\;\;\; with \;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \boldsymbol{\dot\theta}, \boldsymbol{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}
+  \label{eq:phi_4}
+\end{equation}
+\begin{equation}
+  F(s, a, s')_4 = {{\alpha^3_{i_{k}}}} \times \left( -\gamma \times \log _{2} (\mathbf{s'} + 1) + \log _{2} (\mathbf{s} + 1) \right)
+  \label{eq:F_4}
+\end{equation}
+    To help visualise the above equations, they are plotted in Figure \ref{fig:functions}. The results obtained when running each of the above potential-based functions are presented and discussed in Section  \ref{reward-results}.
+
+\newpage
+
+# Experimentation and Results {#results}
+
+## Testing {#testing}
+    The baseline reward function (no changes to the environment or any of the other factors) as well as the final best reward function were tested for $1 \times 10^6$ episodes and for ten runs using different random seeds each time, and the results averaged. To save on running time, all proposals for each $\boldsymbol{\alpha^j_{i}}$ were run three times for $3 \times 10^3$ episodes, what is sufficient to show the trends and behaviours, and allow the decision on the best $\Phi_j$ and $\boldsymbol{\alpha^j_{i}}$ combination. All the graphics in this section, with the exception of the *fitness value* graphic, show the running average of the mean averaged value as a darker line, and the standard deviation as a shadowed area, using a smoothing factor of 10. The *fitness value* is shown as an area to facilitate comparison, and uses a highly smoothed running average of the mean values that resulted in graphics that better capture the overall trend of each combination. All figures were generated using the web-based Weights & Biases^[Weights & Biases: https://wandb.ai/site] dashboard.     
+
+### Reward function {#reward-results}
+    In this section, only the baseline tests, the best results for each of the observed states, and the final results are shown and discussed. The full results for all combinations tested can be found in the Appendix \ref{pbrs_results}.  The main states of concern are the distance to landing pad $\mathbf{d_{pad}}$, the angular velocity $\boldsymbol{\dot\theta}$ and position $\boldsymbol{\theta}$, and the linear velocity $\mathbf{v}$. The fuel remaining $\mathbf{f_{rem}}$ is less concerning at this stage since its initial value is a boundary condition and already limited to 1% only. The *expected fitness* was implemented in the environment and is based on the concepts discussed in Section \ref{reward} and shown in Figure \ref{fig:agent-environment}; if the agent consistently lands on the pad, the expected *fitness value* is 1, and if the rocket has a successful landing, this value is 100.
+
+#### Baseline results  
+      
+    The array of parameters used to run the baseline test is $\boldsymbol{\alpha} = \{ 0, 5, 2, 100, 1, 3, 0, 20, 0, 0, 500 \}$. The results are shown in Figures \ref{fig:baseline_dpad}, \ref{fig:baseline_thetadot}, and \ref{fig:baseline_v}. The figures show clearly that, even after $1e10^6$ episodes, the agent did not manage to successfully solve the environment. The minimum value achieved for $d_{pad}$ is close to 5.7 meters with a standard deviation $\sigma \approx 2$, resulting in a Z-score of $-0.85$ and subsequently a probability $P(d_{pad} \leq 4) < 0.2$. This happens at around 800k episodes, worsening from there, what is also shown in the decrease of the episodic fitness value after this point. Regarding the other variables, Figure \ref{fig:baseline_thetadot} shows that $\dot\theta$ mean value is mostly stable around 3 rad/s, but with a great dispersion, while $\theta$ comes very close to the new landing criteria value, stabilizing at around 0.22 rad with $\sigma \approx 0.1$, but otherwise far from the target value for this experiment.
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/dpad_base.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/fitness_base.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ and Fitness value - baseline evaluation.} 
+  \label{fig:baseline_dpad}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/ang_vel_base.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/ang_pos_base.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ and Angular position $\boldsymbol{\theta}$ - baseline evaluation.} 
+  \label{fig:baseline_thetadot}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/lin_vel_base.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/frem_base.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ and Fuel remaining $\mathbf{f_{rem}}$ - baseline evaluation.} 
+  \label{fig:baseline_v}
+\end{figure}
+    Albeit the values discussed previously do not show a successful landing, they come reasonably close. Unfortunately the linear velocity $v$ follows a completely different trend, reaching a minimum mean value of around 17.4 m/s early in the training process, but increasing from there. This result is not completely unexpected considering the lack of terms related to $v$ in the baseline reward function.  
+
+#### $R^{0}$ and $\Phi_{j}$ results  
+      
+    Figures \ref{fig:best_fitness}, \ref{fig:best_theta}, and \ref{fig:best_v} show a comparison between the best results obtained with the new adapted baseline reward function $R^{0}$ and the best $\Phi_{j}$ for each parameters. In terms of actually reaching the landing pad, none of the $\Phi_{j}$ functions achieved better results than the $R^{0}$, although it is shown in the left panel of Figure \ref{fig:best_fitness} that after 250k episodes the trend is for the episodic fitness of the first to increase, while the latter only shows improvement for $\boldsymbol{\alpha^0_{1}}$. In terms of $\dot\theta$, shown in the left panel of Figure \ref{fig:best_theta}, the results are similar, with the exception of $\Phi_{1}$ with $\boldsymbol{\alpha^2_{8}}$ that has a clear decreasing tendency. The results for parameter $\theta$ are better, with the mean value of all the four best $\Phi_{j}$ functions achieving the successful landing criteria of 0.2 rad. On the other hand the results for $v$ are not promising, with none of $\Phi_{j}$ functions showing any improvement over the $R^{0}$ functions. It is also worth noting that  $\Phi_{4}$ (especially with $\boldsymbol{\alpha^4_{3}}$) is present on all graphs but in Figure \ref{fig:best_v}; in reality, as shown in Appendix \ref{pbrs_results}, this family of reward function obtained very poor results in decreasing the linear velocity of the rocket.
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/best/fitness_phi_best.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/best/dpad_phi_best_fit.png}
+  \centering
+  \caption{Fitness value and distance to landing pad $\mathbf{d_{pad}}$ - $\Phi_{j}$ best results.} 
+  \label{fig:best_fitness}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/best/ang_vel_phi_best.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/best/ang_pos_phi_best.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ and angular position $\boldsymbol{\theta}$ - $\Phi_{j}$ best results.} 
+  \label{fig:best_theta}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{../dissertation/images/results/best/lin_vel_phi_best.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $\Phi_{j}$ best results.} 
+  \label{fig:best_v}
+\end{figure}
+
+#### Combined functions results  
+      
+    Besides the "pure" $\Phi_{j}$ functions described in Section \ref{pyflyt}, five different combinations were also implemented and tested, aiming at extracting the best results from each of the former, and with extra $\alpha_{i_{k}}$ factors to account for the extra terms in some of them. Three $\boldsymbol{\alpha}$ arrays were tested, the first one with the best combination found for the "pure" functions, the second one with the factors halved, and the third with the numbers doubled. The best results are described below, and the composition of each function and the full results are in Appendix \ref{pbrs_results}.     
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/combined/fitness_combined.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/combined/dpad_combined.png}
+  \centering
+  \caption{Fitness value and distance to landing pad $\mathbf{d_{pad}}$ - Combined functions best results.} 
+  \label{fig:comb_fitness}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/combined/ang_vel_combined.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/combined/ang_pos_combined.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ and angular position $\boldsymbol{\theta}$ - Combined functions best results.} 
+  \label{fig:comb_theta}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{../dissertation/images/results/combined/lin_vel_combined.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - Combined functions best results.} 
+  \label{fig:comb_v}
+\end{figure}
+    Although the figures display the best results obtained when running those functions (in terms not only of fitness value but also how close to the goals the agent managed to be), there are clearly no improvements over the original $R^{0}$ functions. The only small success obtained with the composite functions is that they are better than the $\Phi_{j}$ functions in terms of closing the distance to the landing pad (and consequently in terms of episodic fitness). Overall, the better composite function is $R'_{Comb4}$ with $\boldsymbol{\alpha^5_{1}}$, better than the others in all parameters but $v$, which again is to be the most difficult to achieve.
+
+#### Other functions
+      
+    On a last attempt to solve the environment, and following the intuition based on the shape of the functions, three more "composite" reward function were implemented. Two of them, labelled $Y_1$ and $Y_2$, are shown in Figure \ref{fig:other_functions}, and the third is a mix between $R^{0}$ and $y_2$.  
+```{r other_functions, echo = FALSE, include = TRUE, fig.align = 'center', out.width = "50%", fig.cap = "Log2 and Log10 plot comparison" }
+par(mar = c(5, 4, 0, 2) + 0.1, cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+x=seq(0,100,0.1)
+y=1/(x+0.01) - x
+y1=1/(x+0.01) - log2(x+1)
+plot(x,y,type='l',col='purple', xlim=c(0,30), ylim=c(-20,20))
+lines(x,y1,col='red')
+legend('topright',inset=0.05,c("Y1 = 1/(x+0.1) - x","Y2 = 1/(x+0.1) - log2(x+1)"),
+       lty=1,col=c("purple","red"),cex=1.5,pch=1,pt.cex=1.5)
+```
+    Unfortunately, as shown in Figures \ref{fig:y_fitness}, \ref{fig:y_theta}, and \ref{fig:y_v}, the implementation of this family of functions also failed to train a successful agent. In terms of ${d_{pad}}$, and consequently the fitness value, none of those functions managed to improve upon the base $R^{0}$ functions. And as before, only the values of $\dot\theta$ and $\theta$ shown any improvement, with the second consistently achieving values lower than 0.2 rad.
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/y_functions/fitness_y.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/y_functions/dpad_y.png}
+  \centering
+  \caption{Fitness value and distance to landing pad $\mathbf{d_{pad}}$ - Y-functions best results.} 
+  \label{fig:y_fitness}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/y_functions/ang_vel_y.png}
+  \hfill
+  \includegraphics[width=0.475\textwidth]{../dissertation/images/results/y_functions/ang_pos_y.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ and angular position $\boldsymbol{\theta}$ - Y-functions best results.} 
+  \label{fig:y_theta}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.5\textwidth]{../dissertation/images/results/y_functions/lin_vel_y.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - Y-functions best results.} 
+  \label{fig:y_v}
+\end{figure}
+
+## Project Management {#management}
+    The primary research method, following the iterative approach described in Section \ref{software}, was to use experimentation and ultimately build two new deep reinforcement learning (DRL) applications to solve the simulation-based environment. To improve efficiency and ensure we follow good practices, we aim to reuse as many libraries as possible, as explained in Section \ref{requirements}, and the abundant number of packages and open source applications available for the Python programming language is one of the reasons for its choice. The planning for completion of this research project is divided into "sprints" and outlined in Tables \ref{original_timeplan} and \ref{timeplan}, and follow an agile practice, thus it is also worth noting that each sprint includes not only doing the tasks, but all preparation (researching, finding and reading bibliographic references) and writing required to complete the dissertation.  
+    The first step when undergoing such a project is to ensure all parts work well together, and no dependencies are missed. This was the goal of Sprint #3. The next "working" sprint (after spending sprint #4 ensuring the project proposal is completed and delivered on time) was aimed at not only defining the reward functions, as we plan to have at least one dense and one sparse as options, but the method that will be used to obtain them. Initially we had planned on proposing to use an evolutionary computing (EC) method, like genetic programming [niekum2010genetic], but during sprint #2 it was identified that we would require many thousand hours of GPU running time, and this would make the approach not feasible with the available time and computational power. Another possibility was to use Bayesian optimisation, which is ideal for optimising objective functions that are costly to compute, cannot be evaluated directly and can be used as "black-boxes", and are only evaluated indirectly [@garnett2023bayesian], what would result in this method being a perfect fit for this research project. Sprint #5 was a very crucial step, because it was a prerequisite for the following three sprints.     
+
+|**Sprint**|**When**   |     **What**                                             |     **Requisite(s)**                       |**Completion**|
+|----------|-----------|----------------------------------------------------------|--------------------------------------------|--------------|
+|     1    | 22.05.23  | Ethics application (due 09.06)                           | \--                                        | 100%         |
+|     2    | 29.05.23  | Project and requirements definition and planning         | Ethics application                         | 100%         |
+|     3    | 05.06.23  | Environment installation and commissioning               | Project and requirements definition        | 100%         |
+|     4    | 12.06.23  | Project Proposal (due 19.06)                             | Project and requirements definition        | 100%         |
+|     5    | 19.06.23  | Definition of reward functions                           | Environment installation and commissioning | 0%           |
+|     6    | 26.06.23  | RL method 1 (SAC)                                        | Definition of reward functions             | 50%          |
+|     7    | 03.07.23  | RL method 2 (PPO)                                        | Definition of reward functions             | 0%           |
+|     8    | 10.07.23  | RL method 3 (???)                                        | Definition of reward functions             | 0%           |
+|     9    | 17.07.23  | Project Presentation (due 24.07)                         | All RL methods and results                 | 100%         |
+|    10    | 24.07.23  |                                                          | \--                                        | 0%           |
+|    11    | 31.07.23  | Project Report (due 08.08)                               | EVERYTHING!!                               | 0%           |
+
+Table: Original dissertation project timing and schedule \label{original_timeplan}
+
+    This is the point where we identified problems, requiring a change of plans. Due to the long wall time required to obtain results, and the slow progress in identifying the best reward functions, we requested more time to complete the project, resulting in re-planning the remaining activities as shown in Table \ref{timeplan} and also in Appendix \ref{gantt}. The original planning can also be seen as a Gantt chart in Appendix \ref{original_gantt}.
+
+|**Sprint**|**When**   |**What**                                                  |**Requisite(s)**                            |**Completion**|
+|----------|-----------|----------------------------------------------------------|--------------------------------------------|--------------|
+| ***11*** | 31.07.23  | Definition of reward functions - PBRS                    | Environment installation and commissioning | 95%          |
+|    12    | 14.08.23  | Definition of reward functions - Mixed $\Phi(s)$         | Reward functions - PBRS                    | 10%          |
+|    13    | 28.08.23  | Definition of reward functions - Other approach?         | Reward functions - PBRS                    | 00%          |
+|    14    | 11.09.23  | Definition of reward functions - Other approach?         | Reward functions - PBRS                    | 00%          |
+|    15    | 25.09.23  | SAC agent training and results                           | Definition of reward functions             | 00%          |
+|    16    | 09.10.23  | PPO - initial implementation                             | Definition of reward functions             | 10%          |
+|    17    | 23.10.23  | PPO - final implementation and hyperparameter def.       | PPO - initial implementation               | 00%          |
+|    18    | 06.11.23  | PPO agent training and results                           | PPO - final implementation                 | 00%          |
+|    19    | 20.11.23  | Project Report finishing (originally due 08.08.23)       | EVERYTHING!!                               | 00%          |
+|    --    | 04.12.23  | New due date for the report                              | \--                                        | \--          |
+
+Table: Dissertation project timing and schedule after deferral \label{timeplan}
+
+    Nevertheless, the original Sprint #9 was sucessfuly completed with the results available at the time. After all the DRL methods are implemented, and the agents trained, it would then be possible to compare the results, see if the reward function developed using the first algorithm also obtains good results using others, answer the questions whether defined reward functions overfit or not, and hopefully we would  be able to solve the environment.  
+    Initially, to minimize risks, sprint #10 was left intentionally free, since the target was to have all data available for preparing the Project Presentation during sprint #9 and use this "free" time for any adjustments or suggestions highlighted during the presentation. Unfortunately, and discussed in the previous section, we faced many delays and setbacks, and required more time to complete this project. Luckily this extra time was granted and we could create a new timing plan, with longer sprints to minimise further risks and ensure enough time for completion of the tasks. The original scope was also reduced, since most of the time lost initially was in trying to unsuccessfully optimise the terms of a dense reward function using BO.  
+    To further minimise risks and help with the project organisation, a GitHub^[GitHub: https://github.com/] account was be used to not only be able to fork and modify the environment and other open source libraries that may require changing, but also to version control and backup the project files. Additionally, all the required software packages and libraries have been installed using a Python Virtual Environment, which is useful to isolate the working environment from the base one and have a self-contained application and development platform. The steps to create the environment, install and test all dependencies and packages are described in the Appendix \ref{preparation}, and further information on the use of the GitHub platform can be found in the Appendix \ref{meetings}.  
+
+# Discussion {#discussion}
+    This section concludes the present work, including some considerations and possible concerns regarding the use of Reusable Launch Vehicles (RLVs), a discussion and analysis of the results obtained, and suggestions for future work.  
+
+## Social, Legal, Ethical and Professional Considerations {#considerations}
+    In Section \ref{rlv} we listed some of the benefits of developing and deploying RLVs, but as with many other technological breakthroughs, there are potential problems and complications resulting from the advancements brought by them. From a Legal point-of-view, there are roughly three groups of concerns that need addressing before the volume of space flights becomes unmanageable. The first refers to the safety of the space travelers, the definition of what constitutes safety, and if the control of space programs should reside within the State or the private organisations. Unfortunately, being a heavily politicized topic, the actual data referring to safety aspects has little impact in supporting a consensus between both parties [@bouchey2014redefining] with the pro-commercial side tending to prioritize the use of technical requirements and track record, while pro-government supporters push towards valuing organizational experience and higher costs as means to ensure space travel safety. The second concern comes directly from the first, and is one of liability and how to secure the rights of the stakeholders involved in the space exploration (passengers, operators, launching States, etc). This is specially concerning because the legal frameworks to support space exploration have been defined during the cold war era, and besides not following the technological advances of the sector [@padhy2021legal], are very open and full of ambiguities, having only the exploration of the space by government entities in mind and do not clearly define the legal status of the passengers. The third legal consideration is related to the need of a Space Traffic Management (STM) system to be established, the support the increase on capacity, safety and efficiency as the number of space launches rise. It is foreseen that the current Air-Traffic Management (ATM) system and rules will not be able to cope with the mixed-flow nature of RLV operations [@hilton2019space] and the technical challenges it imposes (i.e., limited manoeuvrability and concerns resulting from the higher energy requirements).   
+    Due to the lack of regulations and clarity on the laws, individual States might decide to focus on the financial benefits and facilitate commercial ventures into space in despite of environmental protection, both on Earth and in the outer space [@padhy2021legal], possibly leading to permanent and irreversible damage, and threatening the sustainability and safety of the space environment [@orlova2020present]. The sustainability of space-missions in terms of gaseous emissions and noise are not well documented in the literature [@hilton2019space], mostly due to the secrecy around these endeavors, but @carbajales2023environmental managed to evaluate the environmental impacts of human space travel (excluding unnamed missions and test launches that did not cross Kármán line). The authors concluded that the hourly impact from sustaining humans in space is over 1500 kg $CO_2$-eq per hour, what is 2000 times greater than the emissions of the average person and equivalent to "occupying twenty seats on a Boeing 747 that never lands". While a lot of the environmental impact from space launches come from the direct products of the combustion of propellant, indirect impacts from from the manufacture and supply chain of both fuel and the rocket itself are not negligible.   
+    The environmental impact of space missions also raises moral and ethical questions, because although the majority of Earth's population will never partake in them, we all have to pay the price. This is especially relevant to activities related to space tourism that is only available to the few wealthiest people, further exacerbating the economic-social divisions. The exploration of outer space and its impacts can only be justified when they benefit all human race, not only the ones who participate in them [@carbajales2023environmental]. On top of this socioeconomic division, research also shows that there is a strong contrast between genders when it comes to space tourism, with males positively interested in such activities and females showing no interest in them [@giachino2023generation].    
+
+\newpage
+
+## Critical Appraisal {#appraisal}
+\begin{spacing}{0.5}[ A dispassionate and detailed discussion and analysis of the work and its outcomes, both positive and negative.  The section will demonstrate the knowledge and expertise that you have gained from your project.]\end{spacing}
+     
+    We could have used more runs for better statistical sampling, but time constraints and how long each episode takes limited us to only ten for the baseline and best reward functions, and three for the proposals.
+
+## Conclusions and Future Work {#conclusions}
+\begin{spacing}{0.5}[ Optional introduction ]
+
+[ Comment on what you have achieved in terms of product or other results, with reference to the original project objectives. ]
+
+[ Outline possible enhancements or extensions to the product, or further work needed to address outstanding issues, etc. ]\end{spacing}
+      
+    
+
+## Student Reflections {#reflections}
+\begin{spacing}{0.5}[ A reflective and critical appraisal of your personal performance, problems encountered and how they were resolved, lessons learnt, what could have been done better or differently, etc. ]\end{spacing}
+    
+    Lost a lot of time trying BO, not knowing if the environment was even solvable
+    Did not go changing the environment from the beginning
+    Curriculum learning and any other optimisation technique dropped from scope, also CL would not fit the proposal of this project
+    I did not log everything from the beginning, and missed a couple of interesting runs (like a 2MM episodes run I don't have graphics for)
+
+\newpage
+
+# Bibliography & References {.unnumbered}
+<div id="refs"></div>
+\newpage
+
+# Appendices {-}
+\appendix
+\renewcommand{\thesection}{A}
+
+## Project Proposal {#project_proposal}
+
+    The "Project Proposal" was submitted on 19.06.2023, and is reproduced here for reference:
+\includepdf[pages=-,nup=4,pagecommand={}]{Project_Proposal.pdf}
+\newpage
+
+## Interim Progress Report and Meeting Records {#meetings}
+[ Include here the interim progress report and supporting documentation submitted - including GitHub information ]
+
+### GitHub usage
+
+
+### Meeting records
+
+
+\newpage
+
+## Project Presentation {#project_presentation}
+
+    The "Project Presentation" slides were submitted on 24.07.2023, and are reproduced here for reference. The presentation took place on 01.08.2023.
+\includepdf[pages=-,nup=4,pagecommand={}]{Presentation.pdf}
+\newpage
+
+## Original Project Planning {#original_gantt}
+```{r original_gantt1, fig.align = 'center', fig.cap = "Project planning - Gantt chart", echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/original_gantt1_2.jpg')
+```
+
+```{r original_gantt2, fig.align = 'center', echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/original_gantt2_2.jpg')
+```
+\newpage
+
+## Project Planning after deferral {#gantt}
+```{r gantt1, fig.align = 'center', fig.cap = "Project planning after deferral - Gantt chart", echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/gantt1_3.jpg')
+```
+
+```{r gantt2, fig.align = 'center', echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/gantt2_3.jpg')
+```
+
+```{r gantt3, fig.align = 'center', echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/gantt3_3.jpg')
+```
+\newpage
+
+## Certificate of Ethical Approval {#ethics}
+```{r ethic, fig.align = 'center', echo = FALSE, out.width="95%"}
+knitr::include_graphics('../dissertation/images/230525 Certificate-1536241024_1.jpg')
+```
+\newpage
+
+## Environment and workstation preparation {#preparation}
+
+    Initially install all libraries, packages and dependencies in python, creating a virtual environment for that. Due to some packages being on alpha version, and the possibility of "breaking" the environment, I decided to go step-by-step, creating clones when reaching a good and stable environment which could already be used.  
+    The following is the list of commands for creating it. Note the installation of Pytorch happening twice; this is because after installing the specific packages to test the `PyFlyt/Rocket-Landing-v0`, they caused an error when loading Pytorch:
+
+> `conda create --name pyflyt python=3.9`  
+> `conda activate pyflyt`  
+> `conda install spyder‑kernels=2.1`  
+
+> `conda install -c conda-forge matplotlib`  
+> `pip install torch torchvision torchaudio `  
+>      `--index-url https://download.pytorch.org/whl/cu116`    
+> `pip install opencv-python`  
+> `conda install -c conda-forge pybullet`  
+
+> `pip install gymnasium`  
+> `cd Documents\10_TechnicalMastersProgramme\5-6_Semester\LandgrafL\Git\PyFlyt`  
+> `pip install -e .`  
+
+> `conda create --name pyflyt_clone --clone pyflyt`  
+> `conda activate pyflyt_clone`  
+
+> `# the two next commands "broke" the environment`  
+> `pip3 install jj-wingman`  
+> `cd rocket_landing_sac`  
+> `pip3 install -e . -r requirements.txt`  
+
+> `# and unistalling then re-installing Pytorch fixed it ;)`  
+> `pip uninstall torch`  
+> `pip uninstall torchvision`  
+> `pip uninstall torchaudio`  
+> `pip install torch torchvision torchaudio `  
+> > `--index-url https://download.pytorch.org/whl/cu116`    
+
+> `conda create --name pyflyt_clone_jet --clone pyflyt_clone`  
+> `conda activate pyflyt_clone_jet`  
+
+    Then moving onto a quick testing, to make sure the important packages have been successfully installed and the environment was working:  
+
+> `#%% Testing machine learning libraries`  
+> `import torch`  
+
+> `x = torch.rand(5, 3)`  
+> `print(x)`  
+
+> `print('Cuda available = ', torch.cuda.is_available())`  
+> `if torch.cuda.is_available():`  
+>     `    print('Device count and name = ', torch.cuda.device_count(), torch.cuda.get_device_name(0))`  
+
+> `import wingman`  
+
+> `import pybullet as p`  
+> `import gymnasium`  
+> `import PyFlyt.gym_envs`  
+> `import time`  
+
+> `env = gymnasium.make("PyFlyt/Rocket-Landing-v0", render_mode="human")`  
+> `obs = env.reset()`  
+
+> `termination = False`  
+> `truncation = False`  
+
+> `while not termination or truncation:`  
+>     `    observation, reward, termination, truncation, info = env.step(env.action_space.sample())`  
+
+> `time.sleep(2)`  
+> `env.close()`  
+
+    
+
+\newpage
+
+## Potential-based functions and full results {#pbrs_results}
+      
+
+### $R^{0}$ results  
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/dpad_r0.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $R^{0}$ evaluation.} 
+  \label{fig:r0_dpad}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/ang_vel_r0.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $R^{0}$ evaluation.} 
+  \label{fig:r0_thetadot}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/ang_pos_r0.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $R^{0}$ evaluation.} 
+  \label{fig:r0_theta}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/lin_vel_r0.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $R^{0}$ evaluation.} 
+  \label{fig:r0_v}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/frem_r0.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $R^{0}$ evaluation.} 
+  \label{fig:r0_frem}
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/fitness_r0.png}
+  \centering
+  \caption{Fitness value - $R^{0}$ evaluation.} 
+  \label{fig:r0_fitness}
+\end{figure}
+
+$\boldsymbol{\alpha^0_{0}} = \{ 0, 5, 2, 100, 1, 3, 0, 20, 0, 0, 500 \}$
+
+$\boldsymbol{\alpha^0_{1}} = \{ 0, 5, 1, 100, 2, 5, 0, 50, 0, -50, 1000 \}$
+
+### Phi_1
+      
+\begin{equation}
+\begin{split}
+R'_1 = & - {\alpha^1_{i_{1}}} + ({\alpha^1_{i_{2}}} \times (-\gamma \times \lVert {d_{pad}'} \rVert + \lVert {d_{pad}} \rVert)) + \\
+& ({\alpha^1_{i_{3}}} \times (-\gamma \times \lVert {\dot\theta'} \rVert + \lVert {\dot\theta} \rVert)) + \\
+& ({\alpha^1_{i_{4}}} \times (-\gamma \times \lVert {\theta'} \rVert + \lVert {\theta} \rVert)) + \\
+& ({\alpha^1_{i_{5}}} \times (-\gamma \times \lVert {v'} \rVert + \lVert {v} \rVert)) + \\
+& ({\alpha^1_{i_{6}}} \times (-\gamma \times \lVert {f_{rem}'} \rVert + \lVert {f_{rem}} \rVert)) + R
+\end{split}
+\end{equation}
+
+$\boldsymbol{\alpha^1_{0}} = \{ 1, 3, 100, 1, 3, 1, 0, 20, 0, 0, 500 \}$
+
+$\boldsymbol{\alpha^1_{1}} = \{ 1, 5, 5, 2, 5, 3, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{2}} = \{ 1, 5, 10, 5, 10, 5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{3}} = \{ 1, 5, 25, 10, 25, 10, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{4}} = \{ 1, 5, 0.05, 0.2, 6.667, 0.1, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{5}} = \{ 1, 5, 7.5, 3.5, 7.5, 4, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{6}} = \{ 1, 50, 100, 50, 100, 50, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{7}} = \{ 1, 1, 1, 1, 1, 1, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{8}} = \{ 1, 5, 0.05, 5, 7.1, 3, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^1_{9}} = \{ 1, 5, 0.01, 4.25, 6.8, 5, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/dpad_phi1_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $\Phi_{1}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_vel_phi1_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $\Phi_{1}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_pos_phi1_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $\Phi_{1}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/lin_vel_phi1_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $\Phi_{1}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/frem_phi1_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $\Phi_{1}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/fitness_phi1_full.png}
+  \centering
+  \caption{Fitness value - $\Phi_{1}$ full results.} 
+\end{figure}
+      
+
+### Phi_2
+      
+\begin{equation}
+\begin{split}
+R'_2 = & - {\alpha^2_{i_{1}}} + {\alpha^2_{i_{2}}} \times \left( \frac{\gamma}{\lVert \mathbf{d_{pad}'} \rVert} - \frac{1}{\lVert \mathbf{d_{pad}} \rVert} \right) + \\
+& {\alpha^2_{i_{3}}} \times \left( \frac{\gamma}{\lVert \mathbf{\dot\theta'} \rVert} - \frac{1}{\lVert \mathbf{\dot\theta} \rVert} \right) + {\alpha^2_{i_{4}}} \times \left( \frac{\gamma}{\lVert \mathbf{\theta'} \rVert} - \frac{1}{\lVert \mathbf{\theta} \rVert} \right) + \\ 
+& {\alpha^2_{i_{5}}} \times \left( \frac{\gamma}{\lVert \mathbf{v'} \rVert} - \frac{1}{\lVert \mathbf{v} \rVert} \right) + {\alpha^2_{i_{6}}} \times \left( \frac{\gamma}{\lVert \mathbf{f_{rem}'} \rVert} - \frac{1}{\lVert \mathbf{f_{rem}} \rVert} \right) + R
+\end{split}
+\end{equation}
+
+$\boldsymbol{\alpha^2_{0}} = \{ 2, 3, 1000, 300, 10, 500, 0, 20, 0, 0, 500 \}$
+
+$\boldsymbol{\alpha^2_{1}} = \{ 2, 5, 500, 150, 5, 250, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{2}} = \{ 2, 5, 750, 500, 5, 750, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{3}} = \{ 2, 5, 300, 600, 3, 1000, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{4}} = \{ 2, 5, 2.5, 20, 3.333, 15, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{5}} = \{ 2, 5, 625, 325, 5, 500, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{6}} = \{ 2, 50, 5000, 50, 7500, 50, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{7}} = \{ 2, 1, 1, 1, 1, 1, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^2_{8}} = \{ 2, 5, 1, 750, 20, 750, 0, 50, 0, -50, 100 \}$
+
+$\boldsymbol{\alpha^2_{9}} = \{ 2, 5, 0.005, 0.04, 0.667, 0.02, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/dpad_phi2_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $\Phi_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_vel_phi2_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $\Phi_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_pos_phi2_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $\Phi_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/lin_vel_phi2_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $\Phi_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/frem_phi2_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $\Phi_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/fitness_phi2_full.png}
+  \centering
+  \caption{Fitness value - $\Phi_{2}$ full results.} 
+\end{figure}
+      
+
+### Phi_3
+      
+\begin{equation}
+\begin{split}
+R'_2 = & - {\alpha^3_{i_{1}}} + {\alpha^3_{i_{2}}} \times \left( -\gamma \times \log _{10} (d_{pad}' + 1) + \log _{10} (d_{pad} + 1) \right) + \\
+& {\alpha^3_{i_{3}}} \times \left( -\gamma \times \log _{10} (\dot\theta' + 1) + \log _{10} (\dot\theta + 1) \right) + \\
+& {\alpha^3_{i_{4}}} \times \left( -\gamma \times \log _{10} (\theta' + 1) + \log _{10} (\theta + 1) \right) + \\
+& {\alpha^3_{i_{5}}} \times \left( -\gamma \times \log _{10} (v' + 1) + \log _{10} (v + 1) \right) + \\
+& {\alpha^3_{i_{6}}} \times \left( -\gamma \times \log _{10} (f_{rem}' + 1) + \log _{10} (f_{rem} + 1) \right) + R
+\end{split}
+\end{equation}
+
+$\boldsymbol{\alpha^3_{0}} = \{ 3, 3, 2, 1, 5, 2, 0, 20, 0, 0, 500 \}$
+
+$\boldsymbol{\alpha^3_{1}} = \{ 3, 5, 3, 3, 2, 3, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{2}} = \{ 3, 5, 10, 5, 10, 10, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{3}} = \{ 3, 5, 3, 10, 5, 5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{4}} = \{ 3, 5, 0.15, 0.04, 3.333, 0.5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{5}} = \{ 3, 5, 2.5, 2, 3.5, 0.75, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{6}} = \{ 3, 50, 1.5, 0.4, 33.33, 5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{7}} = \{ 3, 1, 1, 1, 1, 1, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{8}} = \{ 3, 5, 1, 10, 5, 50, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^3_{9}} = \{ 3, 5, 100, 1000, 500, 5000, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/dpad_phi3_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $\Phi_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_vel_phi3_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $\Phi_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_pos_phi3_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $\Phi_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/lin_vel_phi3_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $\Phi_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/frem_phi3_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $\Phi_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/fitness_phi3_full.png}
+  \centering
+  \caption{Fitness value - $\Phi_{3}$ full results.} 
+\end{figure}
+      
+
+### Phi_4
+      
+\begin{equation}
+\begin{split}
+R'_2 = & - {\alpha^4_{i_{1}}} + {\alpha^4_{i_{2}}} \times \left( -\gamma \times \log _{2} (d_{pad}' + 1) + \log _{2} (d_{pad} + 1) \right) + \\
+& {\alpha^4_{i_{3}}} \times \left( -\gamma \times \log _{2} (\dot\theta' + 1) + \log _{2} (\dot\theta + 1) \right) + \\
+& {\alpha^4_{i_{4}}} \times \left( -\gamma \times \log _{2} (\theta' + 1) + \log _{2} (\theta + 1) \right) + \\
+& {\alpha^4_{i_{5}}} \times \left( -\gamma \times \log _{2} (v' + 1) + \log _{2} (v + 1) \right) + \\
+& {\alpha^4_{i_{6}}} \times \left( -\gamma \times \log _{2} (f_{rem}' + 1) + \log _{2} (f_{rem} + 1) \right) + R
+\end{split}
+\end{equation}
+
+$\boldsymbol{\alpha^4_{0}} = \{ 4, 3, 2, 1, 5, 2, 0, 20, 0, 0, 500 \}$
+
+$\boldsymbol{\alpha^4_{1}} = \{ 4, 5, 3, 3, 2, 3, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{2}} = \{ 4, 5, 10, 5, 10, 10, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{3}} = \{ 4, 5, 3, 10, 5, 5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{4}} = \{ 4, 5, 0.05, 0.4, 3.333, 0.5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{5}} = \{ 4, 5, 6.5, 7.5, 7.5, 0.05, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{6}} = \{ 4, 50, 0.5, 4, 33.33, 5, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{7}} = \{ 4, 1, 1, 1, 1, 1, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{8}} = \{ 4, 5, 1, 10, 7.5, 0.05, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^4_{9}} = \{ 4, 5, 1, 5, 8.75, 0.025, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/dpad_phi4_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $\Phi_{4}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_vel_phi4_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $\Phi_{4}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/ang_pos_phi4_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $\Phi_{4}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/lin_vel_phi4_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $\Phi_{4}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/frem_phi4_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $\Phi_{4}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/phis/fitness_phi4_full.png}
+  \centering
+  \caption{Fitness value - $\Phi_{4}$ full results.} 
+\end{figure}
+
+      
+
+### Combined
+    $R'_{Comb1}$ uses the $\Phi_{j}$ that resulted in the best result for each individual observed state, $R'_{Comb2}$ uses the second best combination, and $R'_{Comb3}$ contains the sum of both previous functions. For $R'_{Comb4}$ we used the best terms of all the combinations, and finally, $R'_{Comb5}$ is the sum of $\Phi_{2}$ and $\Phi_{4}$.
+
+\begin{equation}
+  \begin{split}
+    R'_{Comb1} = - & {\alpha^5_{i_{1}}} + (\frac{{\alpha^5_{i_{2}}}}{d_{pad}+0.01}) + ({\alpha^5_{i_{3}}} \times \Delta d_{pad}) + {\alpha^5_{i_{4}}} \times \Phi_{2}(\dot\theta) + \\
+             & {\alpha^5_{i_{6}}} \times \Phi_{1}(\theta) + {\alpha^5_{i_{8}}} \times \Phi_{2}(v) + R_{sparse}
+  \end{split}
+  \label{eq:R_comb1}
+\end{equation}
+
+\begin{equation}
+  R'_{Comb2} = - {\alpha^6_{i_{1}}} + {\alpha^6_{i_{2}}} \times \Phi_{4}(d_pad) + {\alpha^6_{i_{4}}} \times \Phi_{4}(\dot\theta) + {\alpha^6_{i_{6}}} \times \Phi_{4}(\theta) + {\alpha^6_{i_{8}}} \times \Phi_{1}(v) + R_{sparse}
+  \label{eq:R_comb2}
+\end{equation}
+
+\begin{equation}
+  \begin{split}
+    R'_{Comb3} = - & {\alpha^7_{i_{1}}} + (\frac{{\alpha^7_{i_{2}}}}{d_{pad}+0.01}) + (100 \times {\alpha^7_{i_{2}}} \times \Delta d_{pad}) + {\alpha^7_{i_{3}}} \times \Phi_{4}(d_pad) + \\
+               & {\alpha^7_{i_{4}}} \times \Phi_{2}(\dot\theta) + {\alpha^7_{i_{5}}} \times \Phi_{4}(\dot\theta) + {\alpha^7_{i_{6}}} \times \Phi_{1}(\theta) + {\alpha^7_{i_{7}}} \times \Phi_{4}(\theta) + \\
+               & {\alpha^7_{i_{8}}} \times \Phi_{2}(v) + {\alpha^7_{i_{9}}} \times \Phi_{1}(v) + R_{sparse}
+  \end{split}
+  \label{eq:R_comb3}
+\end{equation}
+
+\begin{equation}
+  \begin{split}
+    R'_{Comb4} = - & {\alpha^8_{i_{1}}} + (\frac{{\alpha^8_{i_{2}}}}{d_{pad}+0.1}) + ({\alpha^8_{i_{3}}} \times \Delta d_{pad}) + {\alpha^8_{i_{4}}} \times \Phi_{4}(\dot\theta) + \\
+               & {\alpha^8_{i_{6}}} \times \Phi_{4}(\theta) + {\alpha^8_{i_{8}}} \times \Phi_{2}(v) + R_{sparse}
+  \end{split}
+  \label{eq:R_comb4}
+\end{equation}
+
+$\boldsymbol{\alpha^5_{0}} = \{ 5, 5, 1, 100, 750, 0, 7.1, 0, 750, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^5_{1}} = \{ 5, 5, 0.5, 50, 375, 0, 3.55, 0, 375, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^5_{2}} = \{ 5, 5, 2, 200, 1500, 0, 14.2, 0, 1500, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^6_{0}} = \{ 6, 5, 3, 0, 10, 0, 7.5, 0, 1, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^6_{1}} = \{ 6, 5, 1.5, 0, 5, 0, 3.75, 0, 0.5, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^6_{2}} = \{ 6, 5, 6, 0, 20, 0, 15, 0, 2, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^7_{0}} = \{ 7, 5, 1, 3, 750, 10, 7.1, 7.5, 750, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^7_{1}} = \{ 7, 5, 0.5, 1.5, 375, 5, 3.55, 3.75, 375, 0.5, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^7_{2}} = \{ 7, 5, 2, 6, 1500, 20, 14.2, 15, 1500, 2, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^8_{0}} = \{ 8, 5, 1, 100, 10, 0, 15, 0, 1500, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^8_{1}} = \{ 8, 5, 0.5, 50, 5, 0, 7.5, 0, 750, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^8_{2}} = \{ 8, 5, 2, 200, 20, 0, 30, 0, 3000, 0, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^9_{0}} = \{ 9, 5, 1000, 3, 300, 10, 10, 5, 500, 5, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^9_{1}} = \{ 9, 5, 1, 3, 750, 10, 20, 5, 750, 5, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^9_{2}} = \{ 9, 5, 1000, 6.5, 300, 7.5, 10, 7.5, 500, 0.05, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^9_{3}} = \{ 9, 5, 1, 6.5, 750, 7.5, 20, 7.5, 750, 0.05, 0, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/dpad_combined_full1.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/dpad_combined_full2.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/ang_vel_combined_full1.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/ang_vel_combined_full2.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/ang_pos_combined_full1.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/ang_pos_combined_full2.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/lin_vel_combined_full1.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/lin_vel_combined_full2.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/frem_combined_full1.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/frem_combined_full2.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/fitness_combined_full1.png}
+  \centering
+  \caption{Fitness value - $R'_{5}, R'_{6}, R'_{7}$ combined full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/combined/fitness_combined_full2.png}
+  \centering
+  \caption{Fitness value - $R'_{8}, R'_{9}$ combined full results.} 
+\end{figure}
+
+      
+
+### Y-Functions
+    .
+
+\begin{equation}
+  \begin{split}
+    Y_{1} = - & {\alpha^{10}_{i_{1}}} + (\frac{{\alpha^{10}_{i_{2}}}}{d_{pad}+0.01}) - ({\alpha^{10}_{i_{3}}} \times d_{pad}) + (\frac{{\alpha^{10}_{i_{4}}}}{\dot\theta+0.01}) - ({\alpha^{10}_{i_{5}}} \times \dot\theta) + \\
+              & (\frac{{\alpha^{10}_{i_{6}}}}{\theta+0.01}) - ({\alpha^{10}_{i_{7}}} \times \theta) + (\frac{{\alpha^{10}_{i_{8}}}}{v+0.01}) - ({\alpha^{10}_{i_{9}}} \times v) + R_{sparse}
+  \end{split}
+  \label{eq:y1}
+\end{equation}
+
+\begin{equation}
+  \begin{split}
+    Y_{2} = - & {\alpha^{11}_{i_{1}}} + (\frac{{\alpha^{11}_{i_{2}}}}{d_{pad}+0.01}) - ({\alpha^{11}_{i_{3}}} \times \log _{2} (d_{pad} + 1)) + \\
+              & (\frac{{\alpha^{11}_{i_{4}}}}{\dot\theta+0.01}) - ({\alpha^{11}_{i_{5}}} \times \log _{2} (\dot\theta + 1)) + \\
+              & (\frac{{\alpha^{11}_{i_{6}}}}{\theta+0.01}) - ({\alpha^{11}_{i_{7}}} \times \log _{2} (\theta + 1)) + \\
+              & (\frac{{\alpha^{11}_{i_{8}}}}{v+0.01}) - ({\alpha^{11}_{i_{9}}} \times \log _{2} (v + 1)) + R_{sparse}
+  \end{split}
+  \label{eq:y2}
+\end{equation}
+
+\begin{equation}
+  \begin{split}
+    Y_{3} = - & {\alpha^{12}_{i_{1}}} + (\frac{{\alpha^{12}_{i_{2}}}}{d_{pad}+0.1}) - ({\alpha^{12}_{i_{3}}} \times \Delta (d_{pad})) + \\
+              & (\frac{{\alpha^{12}_{i_{4}}}}{\dot\theta+0.01}) - ({\alpha^{12}_{i_{5}}} \times \log _{2} (\dot\theta + 1)) + \\
+              & (\frac{{\alpha^{12}_{i_{6}}}}{\theta+0.01}) - ({\alpha^{12}_{i_{7}}} \times \log _{2} (\theta + 1)) + \\
+              & (\frac{{\alpha^{12}_{i_{8}}}}{v+0.01}) - ({\alpha^{12}_{i_{9}}} \times \log _{2} (v + 1)) + R_{sparse}
+  \end{split}
+  \label{eq:y3}
+\end{equation}
+
+$\boldsymbol{\alpha^{10}_{0}} = \{ 10, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{10}_{1}} = \{ 10, 5, 2, 0.5, 0.35, 4, 0.2, 66.667, 5.56, 2, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{10}_{2}} = \{ 10, 5, 4, 1, 0.7, 8, 0.4, 133.334, 11.12, 4, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{10}_{3}} = \{ 10, 5, 1, 0.25, 0.175, 2, 0.1, 33.334, 2.78, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{11}_{0}} = \{ 11, 5, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{11}_{1}} = \{ 11, 5, 2, 0.5, 0.35, 4, 0.2, 66.667, 5.56, 2, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{11}_{2}} = \{ 11, 5, 4, 1, 0.7, 8, 0.4, 133.334, 11.12, 4, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{11}_{3}} = \{ 11, 5, 1, 0.25, 0.175, 2, 0.1, 33.334, 2.78, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{0}} = \{ 12, 5, 0.5, 50, 1, 1, 1, 1, 1, 1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{1}} = \{ 12, 5, 0.25, 25, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{2}} = \{ 12, 5, 1, 100, 2, 2, 2, 2, 2, 2, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{3}} = \{ 12, 5, 0.5, 50, 1, 1, 1, 1, 0.1, 0.1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{4}} = \{ 12, 5, 0.5, 50, 2, 2, 2, 2, 0.1, 0.1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{5}} = \{ 12, 5, 0.5, 50, 2, 4, 2, 4, 0.1, 0.2, 0, 0, 100, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{6}} = \{ 12, 5, 0.25, 25, 0.25, 0.25, 0.25, 0.25, 0.1, 0.1, 0, 0, 50, 0, -50, 1000 \}$
+
+$\boldsymbol{\alpha^{12}_{7}} = \{ 12, 5, 0.25, 25, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0, 0, 50, 0, -50, 1000 \}$
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/dpad_y12_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/dpad_y3_full.png}
+  \centering
+  \caption{Distance to landing pad $\mathbf{d_{pad}}$ - $Y_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/ang_vel_y12_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/ang_vel_y3_full.png}
+  \centering
+  \caption{Angular velocity $\boldsymbol{\dot\theta}$ - $Y_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/ang_pos_y12_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/ang_pos_y3_full.png}
+  \centering
+  \caption{Angular position $\boldsymbol{\theta}$ - $Y_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/lin_vel_y12_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/lin_vel_y3_full.png}
+  \centering
+  \caption{Linear velocity $\mathbf{v}$ - $Y_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/frem_y12_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/frem_y3_full.png}
+  \centering
+  \caption{Fuel remaining $\mathbf{f_{rem}}$ - $Y_{3}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/fitness_y12_full.png}
+  \centering
+  \caption{Fitness value - $Y_{1}, Y_{2}$ full results.} 
+\end{figure}
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/results/y_functions/fitness_y3_full.png}
+  \centering
+  \caption{Fitness value - $Y_{3}$ full results.} 
+\end{figure}
+
+      
+\newpage
+
+## Blablabla {#bla}
+      
+      
+\newpage
+
+## Others as required {#others}
+
+```{r, echo = FALSE, include = FALSE }
+setwd("C:/Users/LeandroLandgraf/Documents/10_TechnicalMastersProgramme/5-6_Semester/LandgrafL/Git/PyFlyt-Dissertation/dissertation/")
+getwd()
+library('rmdwc')
+```
+
+```{r, echo = FALSE}
+files <- 'Final_Dissertation.Rmd'
+rmdcount(files)
+```
+
+\appendix
+\newpage
+

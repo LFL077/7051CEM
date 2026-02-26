@@ -1,0 +1,427 @@
+---
+title: "Development and evaluation of Reinforcement Learning strategies for landing a simulated 1:10th scale SpaceX Falcon 9 using the `PyFlyt Rocket-Landing-v0` environment."
+institute: "Coventry University"
+author: "Leandro Landgraf"
+date: "August 2023"
+header-includes: 
+  - \usepackage{amsmath}
+output: 
+  beamer_presentation:
+    number_sections: true
+    slide_level: 2
+    theme: "Boadilla"
+    colortheme: "whale"
+    fonttheme: "professionalfonts"
+bibliography: references.bib
+csl: american-psychological-association-7th-edition.csl
+nocite: '@*'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Overview
+\tableofcontents[hideallsubsections]
+
+# Introduction
+## Problem Statement
+- Development and evaluation of RL methods and algorithms for landing a simulated 1:10th scale SpaceX Falcon 9 rocket, falling at terminal velocity on a landing pad, with only 1% of fuel remaining.
+
+- The simulated rocket is a component of the `PyFlyt Rocket-Landing-v0` environment.
+
+## Research Question(s)
+  1. How can reward functions for reinforcement learning systems be defined?
+  2. Is it possible to successfully solve the `PyFlyt/Rocket-Landing-v0` environment? 
+  3. Can a reward function developed using a given algorithm be solved by another one, under the same circumstances (i.e., do reward functions overfit to a particular algorithm)?
+
+## Aims and Objectives
+- Investigate proposed solutions to the problem (traditional and machine-learning based).
+- Describe the type of simulated environments used in other applications and the `PyFlyt/Rocket-Landing-v0` environment.
+- Identify and select reinforcement learning algorithms and methods suitable for solving `Rocket-Landing-v0`
+- Define and implement the most adequate reward functions to allow `Rocket-Landing-v0` to be solvable.
+- Implement the selected reinforcement learning methods.
+- Demonstrate the feasibility of using reinforcement learning methods to accomplish the control and landing of reusable rockets.
+- Evaluate the implemented algorithms and reward functions.
+- Compare and analyse the results obtained.
+
+
+# Background Research
+## Reusable Launch Vehicles
+- Challenges:
+  - Extreme environmental factors and unknowns
+  - Reduced margin for error
+  - Demand for precise navigation and guidance systems
+  - Error-free propulsion and landing control
+  
+\vspace{2mm} 
+- Advantages:
+  - Potential to dramatically reduce the cost of space launches
+  - Increased accessibility and frequency of launches
+  - Reduction of the environmental footprint
+  - Advancements in technology and engineering
+  - Increased space tourism and commercialization
+
+## Solutions and alternatives
+- Traditional and MPC, convex optimization:
+  - Simplified models [@zaragoza2020guidance]
+  - Complex models [@simplicio2019reusable; @simplicio2019guidance; @gettatelli2023convex; @lee2022multi]
+
+\vspace{2mm} 
+- RL-based, 2D very simplified models, mixed results:
+  - Comparison with traditional control [@ferrante2017robust]
+  - Simple 1D and 2D with curriculum learning and PPO [@kaiser2021optimal]
+  - Curriculum RL with TD3 on a 3DoF plane rigid body model [@yuan2021leveraging]
+  - GA search of reward function [@larasati2022genetic]
+  - PPO and DDPG [@souza2022thrust]
+  - GA and comparison with other methods [@nugroho2023optimization]
+- RL-based, 3D models:
+  - Combination of two techniques: curriculum and imitation learning [@leguet2021landing]
+
+# Methods
+## Reinforcement Learning
+- MDP of the form $M = \langle {S}, {A}, {T}, \gamma, R \rangle$
+  - $S$ is the state space, $A = \{a_{1}, ..., a_{k} \}$ with $k\geq2$ is the action space, $T(s,a,s') = Pr(s'|s,a)$ are the next stage transition probabilities, $\gamma \in (0,1]$ is the discount factor, and $R(s,a,s')$ the reward function defining $r$ received when taking action $a$ in state $s$ resulting in transitioning to state $s'$
+  
+\begin{figure}
+   \includegraphics[width=0.45\textwidth]{../dissertation/images/agent-environment.jpg}
+\end{figure}
+- Solution to $M$: to learn an optimum  policy $\pi^{*}: S \to A$ that maximizes the expected total sum of discounted rewards $\sum_{t=0}^{\infty} \gamma^{t}r_{t}$
+
+## Reinforcement Learning Methods
+### PPO
+- Leverages vectorized environments to improve learning speed
+- On-policy algorithm
+- Can be used for either discrete or continuous action spaces
+
+\vspace{5mm}
+\tiny
+https://spinningup.openai.com/en/latest/algorithms/ppo.html
+
+https://docs.cleanrl.dev/rl-algorithms/ppo/
+
+### SAC
+- Off-policy algorithm
+- Suitable for continuous action spaces
+- Characterized by use of *entropy regularization* 
+
+\vspace{5mm}
+\tiny
+https://spinningup.openai.com/en/latest/algorithms/sac.html
+
+https://docs.cleanrl.dev/rl-algorithms/sac/
+
+## PyFlyt Rocket-Landing-v0
+\begin{figure}
+   \includegraphics[width=0.45\textwidth]{../dissertation/images/env_gif1.png}
+   \hfill
+   \includegraphics[width=0.45\textwidth]{../dissertation/images/env_gif2.png}
+\end{figure}
+
+- Action space: $\mathbf{a} = [\nu_{x}, \nu_{y}, \nu_{yaw}, \iota, \beta, \xi_{x}, \xi_{y}]$
+- Observation space: $\mathbf{s} = [\mathbf{\dot\theta_{B}}, \mathbf{\theta_{G}}, \mathbf{\dot{p}}_{B}, \mathbf{p}_{G}, \mathbf{a}_{t-1}, \mathbf{s}_{aux}, \mathbb{I}_{pad}, \mathbf{d}_{G}]$
+
+## Original Landing Criteria
+\footnotesize
+$\mathbb{I}_{pad} = \begin{cases} 1 & \text{if landing pad contact} \\ 0 & \text{otherwise} \end{cases}$
+
+$\mathbb{I}_{collision} = \begin{cases} 1 & \text{if } [(\dot\theta_{t-1} > 0.35 rad/s) \lor (v_{t-1} > 1.0 m/s)] \land \mathbb{I}_{pad} \\ 0 & \text{otherwise} \end{cases}$
+
+$\mathbb{I}_{landed} = \begin{cases} 1 & \text{if } [(\dot\theta_{t-1} < 0.02 rad/s) \land (v_{t-1}<0.02 m/s) \land (\theta_t<0.1 rad)] \land \mathbb{I}_{pad} \\ 0 & \text{otherwise} \end{cases}$
+
+- Problems:
+  - There is a "deadband" between $\mathbb{I}_{collision}$ and $\mathbb{I}_{landed}$
+  - The maximum allowed linear velocity is too low 
+  - No overturn stability criteria considered from "crashing" (estimated to be $\approx 0.4 rad$)
+  - Criteria for $\mathbb{I}_{landed}$ are possibly too restrictive
+
+\vspace{5mm}
+\color{white}
+\tiny
+https://cosmosmagazine.com/space/launch-land-repeat-reusable-rockets-explained/
+
+https://www.teslarati.com/how-spacex-achieves-falcon-9-rocket-landing-accuracy/
+
+https://space.stackexchange.com/questions/8771/how-stable-would-a-falcon-9-first-stage-be-after-it-has-landed-on-a-drone-ship
+
+
+## Proposed Landing Criteria
+\footnotesize
+$\mathbb{I}_{pad} = \begin{cases} 1 & \text{if landing pad contact} \\ 0 & \text{otherwise} \end{cases}$
+
+$\mathbb{I}_{collision} = \begin{cases} 1 & \text{if } [(\dot\theta_{t-1} \geq 0.35 rad/s) \lor (v_{t-1} \geq 5.56 m/s) \lor (\theta_{t} \geq 0.2 rad)] \land \mathbb{I}_{pad} \\ 0 & \text{otherwise} \end{cases}$
+
+$\mathbb{I}_{landed} = \begin{cases} 1 & \text{if } [(\dot\theta_{t-1} < 0.35 rad/s) \land (v_{t-1}<5.56 m/s) \land (\theta_t<0.2 rad)] \land \mathbb{I}_{pad} \\ 0 & \text{otherwise} \end{cases}$
+
+- Changes:
+  - Removes the "deadband" between $\mathbb{I}_{collision}$ and $\mathbb{I}_{landed}$
+  - Maximum allowed linear velocity of 20 km/h 
+  - Overturn stability criteria of $0.2 rad$ included for "fatal collision" condition
+  - Less restrictive criteria for $\mathbb{I}_{landed}$
+
+
+## Reward Function Design for RL
+- Reward shaping: to include additional rewards to the learning agent
+  - Provides more frequents feedback to agent
+  - Helps guide the learning process
+  - Turns sparse reward to dense reward
+  - Can improve learning speed
+
+\vspace{2mm}
+- Provide function based on state, using ***potential based*** shaping function [@ng1999policy]:
+  - $F(s, a, s') = \gamma \Phi(s') - \Phi(s)$
+  - Results in: $M' = \langle S, A, T, \gamma, R' \rangle$ with $R' = R + F$
+
+## $R^{0} \;\;\; {\alpha_{0}} = 0$
+- Original [@tai2023pyflyt]
+
+$R^{0} = r_{d} + r_{v} + \mathbb{I}_{pad}r_{pad} - 100\mathbb{I}_{ground}$ 
+
+\footnotesize  
+$r_{d} = -0.2 \cdot d_{pad} \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; r_{v} = -d^{-2}_{pad} \cdot v \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; r_{pad} = \begin{cases} -20 & \text{if fatal,} \\ 100 & \text{if safe} \end{cases}$
+
+\normalsize
+\vspace{2mm}
+- Currently:
+
+$R^{0}_{sparse} = {\alpha_{7_{0}}} \times \mathbb{I}_{pad} + {\alpha_{8_{0}}} \times \neg\mathbb{I}_{pad} + {\alpha_{9_{0}}} \times \mathbb{I}_{collision} + {\alpha_{10_{0}}} \times \mathbb{I}_{landed}$
+
+$R^{0}_{dense} = - {\alpha^0_{1}} + (\frac{{\alpha^0_{2}}}{d_{pad}+0.1}) + ({\alpha^0_{3}} \times \Delta d_{pad}) - ({\alpha^0_{4}} \times |\dot\theta_{z}|) - ({\alpha^0_{5}} \times \theta) + R^{0}_{sparse}$ 
+
+\footnotesize
+$\mathbf{\alpha^0_{1}} = \{ 1, 3, 100, 1, 3, 1, 0, 20, 0, 0, 500 \}$
+
+$\mathbf{\alpha^0_{2}} = \{ 0, 5, 1, 100, 2, 5, 0, 50, 0, -50, 1000 \}$
+
+## $\Phi_{0} \;\;\; {\alpha_{0}} = 1$
+$R = {\alpha_{7_{0}}} \times \mathbb{I}_{pad} + {\alpha_{8_{0}}} \times \neg\mathbb{I}_{pad} + {\alpha_{9_{0}}} \times \mathbb{I}_{collision} + {\alpha_{10_{0}}} \times \mathbb{I}_{landed}$
+
+$\Phi_0 = -\lVert \mathbf{s} \rVert \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \mathbf{\dot\theta}, \mathbf{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}$
+
+$F(s, a, s')_0 = {\alpha_{i_{0}}} \times \left( -\gamma \times \lVert \mathbf{s'} \rVert + \lVert \mathbf{s} \rVert \right) \;\;\;\;\;\;\;\; 2 \leq i \leq 6$
+\begin{equation}
+\begin{split}
+R'_0 = & - {\alpha_{1_{0}}} + ({\alpha_{2_{0}}} \times (-\gamma \times \lVert {d_{pad}'} \rVert + \lVert {d_{pad}} \rVert)) + \\
+& ({\alpha_{3_{0}}} \times (-\gamma \times \lVert {\dot\theta'} \rVert + \lVert {\dot\theta} \rVert)) + \\
+& ({\alpha_{4_{0}}} \times (-\gamma \times \lVert {\theta'} \rVert + \lVert {\theta} \rVert)) + \\
+& ({\alpha_{5_{0}}} \times (-\gamma \times \lVert {v'} \rVert + \lVert {v} \rVert)) + \\
+& ({\alpha_{6_{0}}} \times (-\gamma \times \lVert {f_{rem}'} \rVert + \lVert {f_{rem}} \rVert)) + R
+\end{split}
+\end{equation}
+\footnotesize
+$\mathbf{\alpha_{1_{0}}} = \{ 1, 3, 100, 1, 3, 1, 0, 20, 0, 0, 500 \}$
+
+$\mathbf{\alpha_{2_{0}}} = \{ 1, 5, 5, 2, 5, 3, 0, 50, 0, -50, 1000 \}$
+
+## $\Phi_{1} \;\;\; {\alpha_{0}} = 2$
+$R = {\alpha_{7_{1}}} \times \mathbb{I}_{pad} + {\alpha_{8_{1}}} \times \neg\mathbb{I}_{pad} + {\alpha_{9_{1}}} \times \mathbb{I}_{collision} + {\alpha_{10_{1}}} \times \mathbb{I}_{landed}$
+
+$\Phi_1 = \left( \frac{1}{\lVert \mathbf{s} \rVert} \right) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \mathbf{\dot\theta}, \mathbf{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}$
+
+$F(s, a, s')_1 = {\alpha_{i_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{s'} \rVert} - \frac{1}{\lVert \mathbf{s} \rVert} \right) \;\;\;\;\;\;\;\; 2 \leq i \leq 6$
+\begin{equation}
+\begin{split}
+R'_1 = & - {\alpha_{1_{1}}} + {\alpha_{2_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{d_{pad}'} \rVert} - \frac{1}{\lVert \mathbf{d_{pad}} \rVert} \right) + \\
+& {\alpha_{3_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{\dot\theta'} \rVert} - \frac{1}{\lVert \mathbf{\dot\theta} \rVert} \right) + {\alpha_{4_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{\theta'} \rVert} - \frac{1}{\lVert \mathbf{\theta} \rVert} \right) + \\ 
+& {\alpha_{5_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{v'} \rVert} - \frac{1}{\lVert \mathbf{v} \rVert} \right) + {\alpha_{6_{1}}} \times \left( \frac{\gamma}{\lVert \mathbf{f_{rem}'} \rVert} - \frac{1}{\lVert \mathbf{f_{rem}} \rVert} \right) + R
+\end{split}
+\end{equation}
+\footnotesize
+$\mathbf{\alpha_{1_{1}}} = \{ 2, 3, 1000, 300, 10, 500, 0, 20, 0, 0, 500 \}$
+
+$\mathbf{\alpha_{2_{1}}} = \{ 2, 5, 500, 150, 5, 250, 0, 50, 0, -50, 1000 \}$
+
+## $\Phi_{2} \;\;\; {\alpha_{0}} = 3$
+$R = {\alpha_{7_{2}}} \times \mathbb{I}_{pad} + {\alpha_{8_{2}}} \times \neg\mathbb{I}_{pad} + {\alpha_{9_{2}}} \times \mathbb{I}_{collision} + {\alpha_{10_{2}}} \times \mathbb{I}_{landed}$
+
+$\Phi_2 = \left( - \log _{10} (\mathbf{s} + 1) \right) \;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\;\; \mathbf{s} \in \{\mathbf{d_{pad}}, \mathbf{\dot\theta}, \mathbf{\theta}, \mathbf{v}, \mathbf{f_{rem}} \}$
+
+$F(s, a, s')_2 = {\alpha_{i_{2}}} \times \left( -\gamma \times \log _{10} (s' + 1) + \log _{10} (s + 1) \right)$
+\begin{equation}
+\begin{split}
+R'_2 = & - {\alpha_{1_{2}}} + {\alpha_{2_{2}}} \times \left( -\gamma \times \log _{10} (d_{pad}' + 1) + \log _{10} (d_{pad} + 1) \right) + \\
+& {\alpha_{3_{2}}} \times \left( -\gamma \times \log _{10} (\dot\theta' + 1) + \log _{10} (\dot\theta + 1) \right) + \\
+& {\alpha_{4_{2}}} \times \left( -\gamma \times \log _{10} (\theta' + 1) + \log _{10} (\theta + 1) \right) + \\
+& {\alpha_{5_{2}}} \times \left( -\gamma \times \log _{10} (v' + 1) + \log _{10} (v + 1) \right) + \\
+& {\alpha_{6_{2}}} \times \left( -\gamma \times \log _{10} (f_{rem}' + 1) + \log _{10} (f_{rem} + 1) \right) + R
+\end{split}
+\end{equation}
+\footnotesize
+$\mathbf{\alpha_{1_{2}}} = \{ 3, 3, 2, 2, 1, 5, 0, 20, 0, 0, 500 \}$
+
+$\mathbf{\alpha_{2_{2}}} = \{ 3, 5, 3, 3, 2, 3, 0, 50, 0, -50, 1000 \}$
+
+## Curriculum Learning
+- Based on ideas from @yuan2021leveraging and @kaiser2021optimal
+  - Two-stage learning:
+    - First stage: lean to stabilize attitude ($\theta$), minimize velocity ($v$) and spin $\dot\theta$; no fuel limitation at this stage
+    - Second-stage: include fuel limitation (progressively, down to 1%) and aim to landing at the pad (minimize position error)
+  - Use of a multiplicative "curriculum learning factor" $\alpha_{cl} \in [1,10]$ that broadens the success criteria and is controlled by $\mathbb{I}_{landed}$:
+$\alpha_{cl} = \begin{cases} -1 & \text{if } \mathbb{I}_{landed}  \\ +1 & \text{otherwise} \end{cases}$
+
+- Pending implementation.
+
+# Experimentation and Results
+## Testing
+- For each proposal, 10 random seeds, $1 \times 10^6$ episodes
+  - Due to time constraints, for proposals only $350k$ steps, logging at every $5k$
+- Showing only first $800k$ episodes due to inconsistencies when running tests
+- Graphics showing running average with smoothing factor 10 and standard deviation as shadowed area
+
+## Results - Baseline 1/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/best_eval_base.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/reward_base.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/fitness_base.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/frem_base.png}
+\end{figure}
+
+## Results - Baseline 2/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/dpad_base.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/lin_vel_base.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_pos_base.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_vel_base.png}
+\end{figure}
+
+## Results - $R^0$ 1/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/best_eval_r0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/reward_r0.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/fitness_r0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/frem_r0.png}
+\end{figure}
+
+## Results - $R^0$ 2/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/dpad_r0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/lin_vel_r0.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_pos_r0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_vel_r0.png}
+\end{figure}
+
+## Results - $\Phi_{0}$ 1/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/best_eval_phi0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/reward_phi0.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/fitness_phi0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/frem_phi0.png}
+\end{figure}
+
+## Results - $\Phi_{0}$ 2/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/dpad_phi0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/lin_vel_phi0.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_pos_phi0.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_vel_phi0.png}
+\end{figure}
+
+## Results - $\Phi_{1}$ 1/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/best_eval_phi1.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/reward_phi1.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/fitness_phi1.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/frem_phi1.png}
+\end{figure}
+
+## Results - $\Phi_{1}$ 2/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/dpad_phi1.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/lin_vel_phi1.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_pos_phi1.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_vel_phi1.png}
+\end{figure}
+
+## Results - $\Phi_{2}$ 1/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/best_eval_phi2.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/reward_phi2.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/fitness_phi2.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/frem_phi2.png}
+\end{figure}
+
+## Results - $\Phi_{2}$ 2/2
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/dpad_phi2.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/lin_vel_phi2.png}
+\end{figure}
+\vspace{5mm}
+\begin{figure}
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_pos_phi2.png}
+   \hfill
+   \includegraphics[width=0.475\textwidth]{../dissertation/images/ang_vel_phi2.png}
+\end{figure}
+
+
+# Conclusion and Discussions
+## Challenges and Limitations
+- Complex problem and environment
+  - Most RL-based and other similar academic research use simplified models
+- Learning/training process very slow (around 15 hours for each run)
+- Many different runs required for reliable evaluations
+  - Originally planned for 50, but due to time constraints reduced to only 10 ($\approx$ 1 week)
+
+## Conclusion and next steps
+- No proposal successfully solved the environment
+- For each proposal, vectors $\mathbf{\alpha_i}$ have to be better calibrated
+- PBRS may be a good solution for solvable environments when the real value function is known
+- A lot of domain knowledge is required to define shaping functions
+
+- Next steps:
+  - Change $\mathbf{\alpha_i}$ to improve results
+    - Possibly using automated searching algorithms (BO, GA)
+  - Mix the different $\Phi_i$ based on the best outcomes for the relevant observation space variables
+  - Solve the environment using SAC
+  - Keeping the same reward function, apply a different RL algorithm (PPO)
+
+
+# References {.allowframebreaks}
+<div id="refs"></div>
+
+

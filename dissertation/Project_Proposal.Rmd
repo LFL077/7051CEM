@@ -1,0 +1,222 @@
+---
+output: 
+  pdf_document:
+    number_sections: yes
+header-includes: 
+  - \usepackage{setspace}\doublespacing
+  - \usepackage{floatrow}
+  - \floatsetup[figure]{capposition=top}
+  - \usepackage[bookmarksnumbered]{hyperref}
+fontsize: 12pt
+geometry: left=3cm,right=2.5cm,top=2cm,bottom=2cm
+bibliography: references.bib
+csl: american-psychological-association-7th-edition.csl
+nocite: '@*'
+---
+
+\pagenumbering{gobble}
+\newpage
+
+# \textcolor{white}{Title page} {.unnumbered}
+
+```{r cover_prop, fig.align = 'center', echo = FALSE, out.width="50%"}
+knitr::include_graphics('../dissertation/images/CU.png')
+```
+
+\vspace{5   mm}
+
+\begin{center}
+
+\begin{spacing}{1}
+Faculty of Engineering, Environment and Computing
+
+Centre for Computational Science and Mathematical Modelling
+
+MSc Data Science \& Computational Intelligence
+
+\vspace{10mm} 
+
+\begin{Large}
+\textbf{7151CEM - Computing Individual Research Project}
+
+\vspace{5mm} 
+
+\textbf{Coursework 1: Project Proposal}
+
+\vspace{5mm} 
+
+\textbf{"Development and evaluation of Reinforcement Learning strategies for landing a simulated 1:10th scale SpaceX Falcon 9 using the `PyFlyt Rocket-Landing-v0` environment."}
+
+\end{Large}
+
+\vspace{5mm} 
+
+{`r format(Sys.time(), '%B, %Y')`}
+
+\end{spacing}
+
+
+\vspace{20mm} 
+
+\textbf{Student Name:} Leandro Landgraf
+
+\textbf{SID:} 10811492
+
+\textbf{Supervisor:} Dr. James Brusey
+
+\vspace{20mm} 
+
+Academic Year: 2022/23
+
+\end{center}
+
+\newpage
+
+# Table of Contents {.unnumbered}
+\pagenumbering{Roman}
+\singlespacing
+\renewcommand{\contentsname}{}
+\tableofcontents
+\newpage
+
+# List of Figures {.unnumbered}
+\singlespacing
+\renewcommand{\listfigurename}{}
+\listoffigures
+\newpage
+
+# List of Tables {.unnumbered}
+\singlespacing
+\renewcommand{\listtablename}{}
+\listoftables
+\newpage
+
+
+\doublespacing
+
+
+# Section A - Ethics Application
+\pagenumbering{arabic}
+
+```{r ethics_table, fig.align = 'center', fig.cap = "Progress of Ethics Application", echo = FALSE}
+knitr::include_graphics('../dissertation/images/ethics_table.jpg')
+```
+
+    The *Certificate of Ethical Approval* can be found in the Appendix \ref{ethics}.  
+
+\newpage
+
+# Section B – Project Proposal
+
+## Introduction {#intro}
+
+    Reinforcement learning (RL) is a machine learning method that focuses on how an agent can learn to make decisions and take actions in an environment to maximize a cumulative reward [@sutton2018reinforcement; @plaat2022deep]. It is inspired by the way humans and animals learn through trial and error, where actions that lead to positive outcomes are reinforced or rewarded, while actions that lead to negative outcomes are discouraged. In this research project, we address the challenge of defining the reward functions for RL problems, which is constantly overlooked ***(JB: clearly not so. Perhaps you could say "often overlooked")***, and nowadays both the traditional, handcrafted methods, and the optimisation-based ones are being questioned ***(JB: what does this mean?)*** [@mckinney2023fragility; @booth2023perils]. With this research we aim ***(JB: your aim is noble to but too vague. What do you truly aim to do?)*** to participate in the debate and contribute to the definition of a way forward.  
+
+## Problem statement and research questions {#question}
+
+    The main goal of this research is the development and evaluation of RL methods and algorithms for landing a simulated 1:10th scale SpaceX Falcon 9 rocket^[Falcon 9, First Orbital Class Rocket Capable of Reflight: https://www.spacex.com/vehicles/falcon-9/.], falling at terminal velocity on a landing pad, with only 1% of fuel remaining. The simulated rocket is a component of the `PyFlyt Rocket-Landing-v0` environment^[PyFlyt/Rocket-Landing-v0: https://jjshoots.github.io/PyFlyt/documentation/gym_envs/rocket_envs/rocket_landing_env.html.]. To achieve this goal, several objectives have been defined:  
+
+  - Identify and select possible RL algorithms and methods which may be suitable to solving the `PyFlyt Rocket-Landing-v0` environment;
+  - Define and implement the most adequate reward functions to allow the `PyFlyt Rocket-Landing-v0` to be solvable;
+  - Implement the selected reinforcement learning methods;
+  - Evaluate the implemented algorithms and reward functions;
+  - Compare and analyse the results obtained;
+
+    Probably the biggest challenge in describing a RL system, and one that is constantly overlooked, is the definition of a suitable reward function [@mataric1994reward], which are known to be particularly difficult to describe and even more so on demanding and complex tasks [@mckinney2023fragility]. Too much effort ***(JB: why is it "too much"?)*** and focus have been spent on developing and proving different RL algorithms, while at the same time the determination of the function actually responsible for dictating the problem to be solved by the agent is mostly done on a trial-and-error basis and regarded to be "more art than science". This research project is concerned not only with solving the above-mentioned environment, utilizing different RL algorithms, but also on investigating the possibilities and approaches that can be used to define reward functions.     
+    With that in mind, the following research questions address the above objectives:
+
+  1. How can reward functions for RL systems be defined?
+  2. Can a reward function developed using a given algorithm be solved by another one, under the same circumstances (i.e., do reward functions overfit to a particular algorithm [@booth2023perils])?
+  3. Is it possible to successfully solve the `PyFlyt Rocket-Landing-v0` environment?  
+
+## Intended group of users and their requirements {#users}
+
+    This research project is aimed at supporting the Artificial Intelligence (AI) community, specially experts and enthusiasts who focus on RL problems and challenges. It will help the development of RL systems and the understanding of how to decide on reward functions, as well as the risks and advantages of different approaches and methods. As an added benefit, it will also contribute to the work developed by @tai2023pyflyt in making one more environment, which is part of the PyFlyt^[PyFlyt - UAV Simulation Environments for Reinforcement Learning Research: https://jjshoots.github.io/PyFlyt/] library, fully available.        
+    Usually, the above users have the following requirements:  
+
+  - Fully solvable and proven environments;
+  - Starting code available, to facilitate learning and hasten development;
+  - Interesting and challenging problems;
+
+## Project deliverables and final outcome {#project}
+
+    To deliver this research, and ultimately be able to answer the three questions posed in Section \ref{question}, the project will follow an iterative approach. In it, the development happens in steps of increasingly complexity, through several iterations, and thus coding, integration and testing are done in an incremental manner [@mohapatra2010software, p.25-27; @foster2021software, p.10-11]. The steps will happen one after the other, in sprints as shown in Table \ref{schedule}, Section \ref{plan}. Besides, following the ideas proposed by @elio2011computing [p.1-2], we will adopt a "build" research methodology, which ultimately aims at the construction of an "artifact", either physical or (in our case) a software system. According to the authors, to be considered research the artifact must at least include some new features that have not been demonstrated before, and we fulfil this by solving the `PyFlyt Rocket-Landing-v0` environment. They also recommend a few good practices that are already considered in the incremental development and in our system requirements, for example, the use of a modular approach, the reuse of components, and the choice of an adequate programming language.  
+    Upon completion, the following three deliverables are the expected outcome of this research project:  
+
+  1. A machine learning (ML) or optimisation-based method to design reward functions in RL problems;
+  2. More insights regarding the discussions about the methods used to define reward functions in RL, and the problems found on both learned and trial-and-error function design approaches [@booth2023perils; @mckinney2023fragility];
+  3. A contribution to the development of PyFlyt and a fully functional and solvable rocket landing environment to be used in the development of algorithms for RL;
+  4. Two deep reinforcement learning (DRL) algorithms implemented in the fashion of `rocket_landing_sac`^[rocket_landing_sac - Rocket Landing in PyFlyt using SAC: https://github.com/jjshoots/rocket_landing_sac.], which will be useful for the RL community as learning and researching tools.
+
+## Primary research plan {#plan}
+
+    The primary research method is to use experimentation and ultimately build two new DRL applications to solve a simulation-based environment. To improve efficiency and ensure we follow good practices, we aim to reuse as many libraries as possible, and the abundant number of packages and open-source applications available for the Python programming language is one of the reasons for its choice. The planning for completion of this research project is divided into "sprints" and outlined in Table \ref{schedule}, and follow an agile practice, thus it is also worth noting that each sprint includes not only doing the listed tasks, but all reading and writing required to complete the dissertation.  
+    The first step when undergoing such a project is to ensure all parts work well together, and no dependencies are missed. This is the goal of Sprint #3, already successfully completed. The next "working" sprint is aimed at not only defining the reward functions, as we plan to have at least one dense and one sparse as options, but the method that will be used to obtain them. Initially we had planned on proposing to use an evolutionary computing (EC) method, like genetic programming (GP) [@niekum2010genetic], but during sprint #2 it was identified that we would require many thousand hours of GPU running time, and this would make the approach not feasible within the available time. Another possibility is to use Bayesian optimisation (BO), which is ideal for optimising objective functions that are costly to compute, cannot be evaluated directly and can be used as "black boxes", and are only evaluated indirectly [@garnett2023bayesian], making this method a good fit for this research project. Sprint #5 is a very crucial step, because it is a prerequisite for the following three sprints. Those are #6, #7 and #8, when we implement progressively more complex DRL algorithms, starting with SAC [@haarnoja2018soft], moving on to PPO [@schulman2017proximal], and finally a third method still to be decided, but which could be a World Model based one [@ha2018world; @hafner2020mastering] or a combination, like the Rainbow model [@hessel2018rainbow]. The full project planning can be seen as a Gantt chart in Appendix \ref{gantt}.   
+
+|**Sprint**|**When**|     **What**                                      |     **Requisite(s)**                       |**Completion**|
+|----------|--------|---------------------------------------------------|--------------------------------------------|--------------|
+|     1    | 22.05  | Ethics application (due 09.06)                    | \--                                        | 100%         |
+|     2    | 29.05  | Project and requirements definition and planning  | Ethics application                         | 100%         |
+|     3    | 05.06  | Environment installation and commissioning        | Project and requirements definition        | 100%         |
+|     4    | 12.06  | Project Proposal (due 19.06)                      | Project and requirements definition        | 100%         |
+|     5    | 19.06  | Definition of reward functions                    | Environment installation and commissioning | 0%           |
+|     6    | 26.06  | RL method 1 (SAC)                                 | Definition of reward functions             | 50%          |
+|     7    | 03.07  | RL method 2 (PPO)                                 | Definition of reward functions             | 0%           |
+|     8    | 10.07  | RL method 3 (???)                                 | Definition of reward functions             | 0%           |
+|     9    | 17.07  | Project Presentation (due 24.07)                  | All RL methods and results                 | 0%           |
+|    10    | 24.07  |                                                   | \--                                        | 0%           |
+|    11    | 31.07  | Project Report (due 08.08)                        | EVERYTHING!!                               | 0%           |
+
+Table: Dissertation project timing and schedule \label{schedule}
+
+    After all the DRL methods are implemented, and the agents trained, it will be possible to compare the results, see if the reward function developed using the first algorithm also obtains good results using others, answer the questions whether defined reward functions overfit or not, and hopefully we will be able to solve the environment. To minimize risks, sprint #10 was left intentionally free, since the target is to have all data available for preparing the Project Presentation during sprint #9 and use this "free" time for any adjustments or suggestions highlighted during the presentation.  
+    To further minimise risks and help with the project organisation, a GitHub^[GitHub: https://github.com/] account will be used to not only be able to fork and modify the environment and other open source libraries that may require changing, but also to version control and backup the project files. Additionally, all the required software packages and libraries will be installed using a Python Virtual Environment, which is useful to isolate the working environment from the base one and have a self-contained application and development platform.
+
+## Mini literature review {#review}
+
+### The vertical landing of reusable launch vehicles {#rlv}
+
+    Since the beginnings of the space exploration, the same method of delivering people and goods to space by "expendable launch vehicles" has been used. The search for a reliable solution to reduce the costs of space travel and the development of reusable launch vehicles (RLVs) have been significant goals in the space-launch industry for decades [@williamson2016reusables, p.29]. A considerable progress has been made in 2015 when Elon Musk's SpaceX and Jeff Bezos' Blue Origin succeeded in landing the propulsion modules of their spacecrafts. These accomplishments required complex and highly advanced navigation, guidance, control, and sensor technologies, because the landing of an autonomous spacecraft or rocket is an incredibly challenging task, and achieving precision landing near a prescribed target adds an additional level of complexity [@blackmore2016autonomous, p.33].  
+    This was not a very common research topic before SpaceX landed its Falcon 9 rocket, and even after this feat it has been mostly focused on traditional and Model Predictive Control (MPC) methods, some using complex and comprehensive models [@simplicio2019reusable; @simplicio2019guidance; @gettatelli2023convex; @lee2022multi]. What most of the research done so ***(JB: colloquial)*** far have in common is the use of convex optimisation and MPC for path planning, and there is a genuine lack of serious research in the field involving RL. One exception to this is @ferrante2017robust, research using very simplified models and actuators, but making an interesting comparison between four different control methods, two traditional and two RL-based. The traditional strategies implemented are the Proportional Integral Derivative (PID) controller and an MPC method, both obtaining poor results. The two RL methods used are a Q-Learning controller, considered a failure in the implementation, and a Deep Deterministic Policy Gradient (DDPG) controller, both using the same reward function that is given without explanation and is similar to the one used in the OpenAI Gym environment `LunarLander-v2` [@openaigym]. The DDPG model was very successful, managing to achieve the landing with low fuel consumption for most of the scenarios, and resulting in good insights that can be useful in this research.  
+
+### Reward function design {#reward}
+
+    Reward functions in RL are responsible for dictating the problem to be solved by the agents and their definition is an arduous and possibly the most difficult step in designing a RL system [@mataric1994reward]. Early studies proposing a method to define reward functions have since become "rules", in the sense that many experts and newcomers alike profess and follow them, with the goal of obtaining a faster learning [@booth2023perils]. One such "rule" is the use of domain knowledge [@mataric1994reward], using multiple error signals in the functions, to account for multiple goals. Another usual approach is to have multiple goals in one function, adding positive and negative reinforcement ***(JB: I don't think you understood reward shaping here)*** , strategy known as *reward shaping* [@ng1999policy].  
+    For engineers designing RL systems, following the "rules" above neither make the challenge of defining the reward function any easier nor guarantee the learning will be successful. Because of this, some automated approaches have been suggested. @ng2000algorithms address the problem by proposing three algorithms for inverse reinforcement learning ***(JB: presumably you would classify your work as IRL also?)*** (IRL), aiming to obtain the function given observations of optimal behaviour. More recently, @hadfield2017inverse proposed a similar approach denominated inverse reward design (IRD), one that observes the reward function directly, instead of inferring it using the optimal behaviour.  
+    @singh2009rewards question the usual view on RL where the rewards come from the external environment when the agents interact with it, and defended the understanding that the rewards are generated within the internal environment as shown in Figure \ref{fig:agent-environment}. Proposed reward functions should be evaluated according to their *expected fitness*, which relates directly to the final goal or objective. The optimal reward function may include terms and generate behaviours not directly related to the end-goal but that somehow contribute to this target by improving the fitness value. 
+
+\begin{figure}
+  \includegraphics[width=0.75\textwidth]{../dissertation/images/agent-environment.jpg}
+  \centering
+  \caption{Interactions between agent and environment - traditional and integrating intrisic motivation.} 
+  \label{fig:agent-environment}
+  Adapted from Singh et al. (2009, p. 1) ***(JB: do not reproduce without permission)***  
+\end{figure}
+
+    The above discussion naturally leads to the use of evolutionary methods to define reward functions. Some of the same authors employed a GP algorithm in two different classes of distributions of environments and hypothesize that reward functions found using this method would allow an agent to perform better than one that uses a purely fitness-based reward function [@niekum2010genetic]. The *expected fitness* approach is the one we aim to use in this research, but as discussed in Chapter \ref{plan} ***(JB: is it a chapter?)***, the concern with the computational costs led us to decide against GP and lean towards a less computationally intensive method.  
+    Unfortunately, neither the trial-and-error nor the automated reward function learning approaches are without flaws and criticism. The functions designed manually are generally optimised to meet the goal of fast learning with maximum performance metric, what raises the question whether a reward function developed for one algorithm would also be effective with another or would actually overfit to the first. This approach to defining the reward function also may lead to an invalid task specification, failing to encode the desired task [@booth2023perils]. On the same line, most studies on reward learning focused only on the performance of the policies that are trained side by side with the reward function and are likely to suffer from overfitting. Even though the agent trained using this method may perform the correct behaviour, there are no guarantees that a robust reward function has been defined [@mckinney2023fragility]. The issue described above is why this research is also concerned with evaluation of relearning performance, and we aim to implement multiple algorithms, thus ensuring the learned reward function does not overfit to one method only.
+
+\newpage
+
+## Bibliography & References {#refs}
+<div id="refs"></div>
+\newpage
+
+\appendix
+\renewcommand{\thesection}{A}
+# Appendices {-}
+
+## Project planning {#gantt}
+```{r gantt1_prop, fig.align = 'center', fig.cap = "Project planning - Gantt chart", echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/gantt1_2.jpg')
+```
+
+```{r gantt2_prop, fig.align = 'center', echo = FALSE, out.width="100%"}
+knitr::include_graphics('../dissertation/images/gantt2_2.jpg')
+```
+\newpage
+
+## Certificate of Ethical Approval {#ethics}
+```{r ethic_prop, fig.align = 'center', echo = FALSE, out.width="90%"}
+knitr::include_graphics('../dissertation/images/230525 Certificate-1536241024_1.jpg')
+```
